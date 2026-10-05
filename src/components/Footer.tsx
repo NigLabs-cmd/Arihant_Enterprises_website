@@ -1,101 +1,63 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { Mail, MapPin, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+
+const productAreas = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
 
 export default function Footer() {
   return (
     <footer>
-      {/* CTA Strip */}
       <section className="relative overflow-hidden bg-brand-900">
         <div className="absolute inset-0 mesh-gradient opacity-40" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h3 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
-            Ready to Source Premium Indian Products?
-          </h3>
-          <p className="text-brand-400 text-lg mb-8 max-w-2xl mx-auto">
-            Get a customized quotation within 24 hours. No spam, no pressure.
+        <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
+          <h2 className="mb-3 font-display text-3xl font-bold text-white md:text-4xl">
+            Have a product enquiry?
+          </h2>
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-brand-300">
+            Contact us with the product name or specification you are looking for.
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-accent-500 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-accent-400 hover:shadow-glow transition-all duration-300 group"
+            className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 font-semibold text-brand-900 transition-all duration-300 hover:-translate-y-0.5"
           >
-            Get Your Free Quote
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            Contact Us
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>
 
-      {/* Main Footer */}
       <div className="bg-brand-950 text-brand-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* Brand */}
-          <div className="md:col-span-2 lg:col-span-1">
-            <div className="mb-5">
-              <Image
-                src="/logo.png"
-                alt="Fast Scaling Trade"
-                width={796}
-                height={344}
-                className="h-10 w-auto brightness-0 invert opacity-90"
-                unoptimized
-              />
-            </div>
-            <p className="text-sm leading-relaxed mb-6">
-              Your reliable sourcing partner for premium Indian products. Trusted by buyers across Africa, the Middle East, and beyond.
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
+          <div>
+            <div className="mb-4 font-display text-lg font-bold text-white">Industrial Oils &amp; Lubricants</div>
+            <p className="max-w-sm text-sm leading-relaxed">
+              Trading and supply of industrial oils, machine oils, lubricants and greases.
             </p>
-            <a href="mailto:info@fastscalingai.com" className="inline-flex items-center gap-2 text-accent-400 hover:text-accent-300 text-sm transition-colors">
-              <Mail className="w-4 h-4" />
-              info@fastscalingai.com
-            </a>
           </div>
 
-          {/* Products */}
           <div>
-            <h4 className="text-white font-semibold mb-5 text-xs uppercase tracking-[0.2em]">Products</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Jaggery &amp; Sugar</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Textiles &amp; Garments</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Leather Goods</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Carpets &amp; Rugs</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Handicrafts</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors duration-200">Spices &amp; Tea</Link></li>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">Product Areas</h3>
+            <ul className="space-y-2 text-sm">
+              {productAreas.map((area) => (
+                <li key={area}>
+                  <Link href="/products" className="transition-colors hover:text-white">{area}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Markets */}
           <div>
-            <h4 className="text-white font-semibold mb-5 text-xs uppercase tracking-[0.2em]">Markets</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">Tanzania</Link></li>
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">Kenya</Link></li>
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">Nigeria</Link></li>
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">UAE</Link></li>
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">United Kingdom</Link></li>
-              <li><Link href="/markets" className="hover:text-white transition-colors duration-200">China</Link></li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-white font-semibold mb-5 text-xs uppercase tracking-[0.2em]">Contact</h4>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3">
-                <Mail className="w-4 h-4 mt-0.5 text-accent-500 flex-shrink-0" />
-                <div>
-                  <a href="mailto:info@fastscalingai.com" className="hover:text-white transition-colors block">info@fastscalingai.com</a>
-                  <a href="mailto:exports@fastscalingai.com" className="hover:text-white transition-colors block">exports@fastscalingai.com</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 mt-0.5 text-accent-500 flex-shrink-0" />
-                <span>Delhi, India</span>
-              </li>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/" className="transition-colors hover:text-white">Home</Link></li>
+              <li><Link href="/about" className="transition-colors hover:text-white">About</Link></li>
+              <li><Link href="/products" className="transition-colors hover:text-white">Products</Link></li>
+              <li><Link href="/contact" className="transition-colors hover:text-white">Contact</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/5 py-6 text-center text-xs text-brand-500">
-          &copy; {new Date().getFullYear()} Fast Scaling Trade. All rights reserved.
+          &copy; {new Date().getFullYear()} Industrial Oils &amp; Lubricants. All rights reserved.
         </div>
       </div>
     </footer>

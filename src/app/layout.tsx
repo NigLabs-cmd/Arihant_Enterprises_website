@@ -20,60 +20,25 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Fast Scaling Trade | Premium Indian Export Partner',
-    template: '%s | Fast Scaling Trade',
+    default: 'Industrial Oils, Lubricants & Greases',
+    template: '%s | Industrial Oils, Lubricants & Greases',
   },
-  description: 'Fast Scaling Trade is a trusted Indian export partner specializing in jaggery, textiles, leather, carpets, handicrafts, spices, and more. Serving Africa, Middle East, UK, and Asia.',
-  keywords: 'Fast Scaling Trade, Indian exporter, jaggery export, textiles export, Africa trade, Tanzania importer, export from India, international trade',
-  metadataBase: new URL('https://fastscalingai.com'),
+  description: 'Industrial and machine oils, lubricants and greases from brands including MAK, HP, Shell and IndianOil.',
+  keywords: 'industrial oils, machine oils, lubricants, grease, hydraulic oil, gear oil',
   openGraph: {
-    title: 'Fast Scaling Trade | Premium Indian Export Partner',
-    description: 'Connecting verified Indian manufacturers with international buyers across Africa, Middle East, UK, and Asia. 11+ product categories, competitive pricing, on-time delivery.',
-    url: 'https://fastscalingai.com',
-    siteName: 'Fast Scaling Trade',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Fast Scaling Trade' }],
-    locale: 'en_US',
+    title: 'Industrial Oils, Lubricants & Greases',
+    description: 'Browse industrial and machine oils, lubricants and greases.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Fast Scaling Trade | Premium Indian Export Partner',
-    description: 'Connecting verified Indian manufacturers with international buyers. 11+ product categories, competitive pricing, on-time delivery.',
-    images: ['/og-image.jpg'],
+    title: 'Industrial Oils, Lubricants & Greases',
+    description: 'Browse industrial and machine oils, lubricants and greases.',
   },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: '/apple-touch-icon.png',
-  },
-  manifest: '/site.webmanifest',
   robots: {
     index: true,
     follow: true,
   },
-};
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Fast Scaling Trade',
-  url: 'https://fastscalingai.com',
-  logo: 'https://fastscalingai.com/logo.png',
-  description: 'Premium Indian export partner connecting verified manufacturers with international buyers across Africa, Middle East, UK, and Asia.',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Delhi',
-    addressCountry: 'IN',
-  },
-  email: 'info@fastscalingai.com',
-  sameAs: [
-    'https://www.linkedin.com/company/fast-scaling-trade',
-  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -93,10 +58,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
       </head>
       <body className="min-h-screen flex flex-col font-sans">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

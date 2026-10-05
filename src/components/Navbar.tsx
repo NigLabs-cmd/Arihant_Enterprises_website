@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
@@ -9,8 +8,6 @@ const links = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/products', label: 'Products' },
-  { href: '/markets', label: 'Markets' },
-  { href: '/blog', label: 'Resources' },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -38,17 +35,9 @@ export default function Navbar() {
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[72px]">
         <Link href="/" className="flex-shrink-0">
-          <Image
-            src="/logo.png"
-            alt="Fast Scaling Trade"
-            width={796}
-            height={344}
-            className={`h-10 w-auto transition-all duration-300 ${
-              isTransparent ? 'brightness-0 invert' : ''
-            }`}
-            unoptimized
-            priority
-          />
+          <span className={`font-display text-sm font-bold tracking-wide sm:text-base ${isTransparent ? 'text-white' : 'text-brand-900'}`}>
+            Industrial Oils &amp; Lubricants
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
