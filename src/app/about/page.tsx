@@ -16,7 +16,7 @@ export default function AboutPage() {
     <>
       <PageHero
         title="About Us"
-        subtitle="We deal in industrial and machine oils, lubricants and greases from branded manufacturers."
+        subtitle="Established in 1996, we are trusted suppliers and stockists of leading brands such as HPCL, Servo (IOC), MAK (BPCL), Castrol, Mobil, Total, Gulf, and more. With over 30 years of expertise in the trading industry, we pride ourselves on delivering reliable, round‑the‑clock and door-step service ensuring your business operations run seamlessly without interruption."
         imageSrc="/images/heroes/about.jpg"
         imageAlt="Industrial lubrication products"
       />

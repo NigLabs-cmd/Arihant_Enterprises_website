@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Mail, Phone } from 'lucide-react';
 
 const productAreas = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
 
@@ -26,11 +26,11 @@ export default function Footer() {
       </section>
 
       <div className="bg-brand-950 text-brand-400">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
           <div>
-            <div className="mb-4 font-display text-lg font-bold text-white">Industrial Oils &amp; Lubricants</div>
+            <div className="mb-4 font-display text-lg font-bold text-white">Arihant Enterprises</div>
             <p className="max-w-sm text-sm leading-relaxed">
-              Trading and supply of industrial oils, machine oils, lubricants and greases.
+              Mumbai-based suppliers of industrial oils, lubricants, and greases since 1996.
             </p>
           </div>
 
@@ -54,10 +54,40 @@ export default function Footer() {
               <li><Link href="/contact" className="transition-colors hover:text-white">Contact</Link></li>
             </ul>
           </div>
+
+          <div>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">Contact Us</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a href="tel:+919820671176" className="flex items-center gap-2 transition-colors hover:text-white">
+                  <Phone className="h-4 w-4 flex-shrink-0" />
+                  +91 9820671176
+                </a>
+              </li>
+              <li>
+                <a href="tel:+919152352574" className="flex items-center gap-2 transition-colors hover:text-white">
+                  <Phone className="h-4 w-4 flex-shrink-0" />
+                  +91 9152352574
+                </a>
+              </li>
+              <li>
+                <a href="mailto:arihantoil01@gmail.com" className="flex items-center gap-2 break-all transition-colors hover:text-white">
+                  <Mail className="h-4 w-4 flex-shrink-0" />
+                  arihantoil01@gmail.com
+                </a>
+              </li>
+              <li>
+                <a href="mailto:arihantoil02@gmail.com" className="flex items-center gap-2 break-all transition-colors hover:text-white">
+                  <Mail className="h-4 w-4 flex-shrink-0" />
+                  arihantoil02@gmail.com
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="border-t border-white/5 py-6 text-center text-xs text-brand-500">
-          &copy; {new Date().getFullYear()} Industrial Oils &amp; Lubricants. All rights reserved.
+          &copy; {new Date().getFullYear()} Arihant Enterprises. All rights reserved.
         </div>
       </div>
     </footer>

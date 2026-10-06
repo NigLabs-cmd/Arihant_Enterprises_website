@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -34,9 +35,17 @@ export default function Navbar() {
       }`}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[72px]">
-        <Link href="/" className="flex-shrink-0">
+        <Link href="/" className="flex flex-shrink-0 items-center gap-2.5">
+          <Image
+            src="/images/arihant-logo.png"
+            alt=""
+            width={44}
+            height={44}
+            className="h-10 w-10 object-contain"
+            priority
+          />
           <span className={`font-display text-sm font-bold tracking-wide sm:text-base ${isTransparent ? 'text-white' : 'text-brand-900'}`}>
-            Industrial Oils &amp; Lubricants
+            Arihant Enterprises
           </span>
         </Link>
 

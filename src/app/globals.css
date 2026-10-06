@@ -15,10 +15,10 @@ html { scroll-behavior: smooth; }
 @layer utilities {
   .tabular-nums { font-variant-numeric: tabular-nums; }
 
-  /* Premium hero overlay — deep charcoal with teal tint */
+  /* Deep navy overlay keeps hero text readable over varied photography. */
   .hero-overlay {
     @apply absolute inset-0;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(17, 94, 89, 0.85) 50%, rgba(15, 23, 42, 0.88) 100%);
+    background: linear-gradient(135deg, rgba(8, 20, 60, 0.92) 0%, rgba(17, 31, 80, 0.86) 55%, rgba(8, 20, 60, 0.9) 100%);
   }
 
   /* Elegant card hover with glow */
@@ -29,18 +29,18 @@ html { scroll-behavior: smooth; }
     @apply -translate-y-1.5 shadow-elevated-lg;
   }
 
-  /* Teal gradient text */
+  /* Restrained red brand accent */
   .gradient-text {
-    background: linear-gradient(135deg, #14b8a6, #2dd4bf, #14b8a6);
+    background: linear-gradient(135deg, #b91c1c, #ef4444, #b91c1c);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shimmer 4s linear infinite;
   }
 
-  /* Subtle shimmer for accents */
+  /* Subtle red shimmer for accents */
   .shimmer {
-    background: linear-gradient(90deg, #14b8a6, #2dd4bf, #5eead4, #2dd4bf, #14b8a6);
+    background: linear-gradient(90deg, #b91c1c, #dc2626, #f87171, #dc2626, #b91c1c);
     background-size: 300%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -71,7 +71,7 @@ html { scroll-behavior: smooth; }
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, #14b8a6, #2dd4bf, #0d9488);
+    background: linear-gradient(135deg, #b91c1c, #ef4444, #991b1b);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -81,11 +81,11 @@ html { scroll-behavior: smooth; }
   /* Animated mesh gradient */
   .mesh-gradient {
     background:
-      radial-gradient(at 40% 20%, rgba(20, 184, 166, 0.12) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(45, 212, 191, 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(15, 118, 110, 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, rgba(20, 184, 166, 0.06) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(45, 212, 191, 0.1) 0px, transparent 50%);
+      radial-gradient(at 40% 20%, rgba(220, 38, 38, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(248, 113, 113, 0.07) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(185, 28, 28, 0.07) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(220, 38, 38, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(248, 113, 113, 0.08) 0px, transparent 50%);
   }
 }
 
@@ -107,6 +107,6 @@ html { scroll-behavior: smooth; }
 
 /* Selection color */
 ::selection {
-  background: rgba(20, 184, 166, 0.2);
-  color: #0f172a;
+  background: rgba(220, 38, 38, 0.18);
+  color: #111f50;
 }

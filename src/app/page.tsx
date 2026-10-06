@@ -5,7 +5,7 @@ import SectionHeader from '@/components/SectionHeader';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Industrial Oils, Lubricants & Greases',
+  title: 'Arihant Enterprises',
   description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Shell and IndianOil.',
 };
 
@@ -20,9 +20,9 @@ export default function Home() {
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)', backgroundSize: '72px 72px' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <p className="text-accent-300 text-xs font-semibold uppercase tracking-[0.2em] mb-5">Industrial lubrication products</p>
+            <p className="text-accent-300 text-xs font-semibold uppercase tracking-[0.2em] mb-5"> Lubrication products</p>
             <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight max-w-4xl">
-              Industrial &amp; Machine Oils, Lubricants and Greases
+              Industrial Oils,  Machine Oils, Lubricants and Greases
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-brand-300 leading-relaxed">
               Browse products from brands we deal in, or contact us with your product requirements.

@@ -19,20 +19,23 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: '/images/arihant-logo.png',
+  },
   title: {
-    default: 'Industrial Oils, Lubricants & Greases',
-    template: '%s | Industrial Oils, Lubricants & Greases',
+    default: 'Arihant Enterprises',
+    template: '%s | Arihant Enterprises',
   },
   description: 'Industrial and machine oils, lubricants and greases from brands including MAK, HP, Shell and IndianOil.',
   keywords: 'industrial oils, machine oils, lubricants, grease, hydraulic oil, gear oil',
   openGraph: {
-    title: 'Industrial Oils, Lubricants & Greases',
+    title: 'Arihant Enterprises',
     description: 'Browse industrial and machine oils, lubricants and greases.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Industrial Oils, Lubricants & Greases',
+    title: 'Arihant Enterprises',
     description: 'Browse industrial and machine oils, lubricants and greases.',
   },
   robots: {
