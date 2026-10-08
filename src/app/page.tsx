@@ -1,15 +1,25 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import FadeIn from '@/components/FadeIn';
 import SectionHeader from '@/components/SectionHeader';
 import { ArrowRight, MessageCircle } from 'lucide-react';
+import makLogo from '@/app/products/Servo_image.jpg';
+import hpLogo from '@/app/products/HP_image.jpg';
+import servoLogo from '@/app/products/MAk_image.jpg';
+import castrolLogo from '@/app/about/Castrol_image.png';
 
 export const metadata: Metadata = {
   title: 'Arihant Enterprises',
-  description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Shell and IndianOil.',
+  description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Servo and Castrol.',
 };
 
-const brands = ['MAK', 'HP', 'Shell', 'IndianOil'];
+const brands = [
+  { name: 'MAK', logo: makLogo },
+  { name: 'HP', logo: hpLogo },
+  { name: 'Servo', logo: servoLogo },
+  { name: 'Castrol', logo: castrolLogo },
+];
 const categories = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
 
 export default function Home() {
@@ -21,7 +31,7 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <p className="text-accent-300 text-xs font-semibold uppercase tracking-[0.2em] mb-5"> Lubrication products</p>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight max-w-4xl">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold text-white leading-tight max-w-4xl mx-auto text-center">
               Industrial Oils,  Machine Oils, Lubricants and Greases
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-brand-300 leading-relaxed">
@@ -44,12 +54,26 @@ export default function Home() {
           <SectionHeader
             eyebrow="Brands We Deal In"
             headline="Branded lubrication products"
-            subheadline="We deal in products from MAK, HP, Shell, IndianOil and other brands."
+            subheadline="We deal in products from MAK, HP, Servo, Castrol and other brands."
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {brands.map((brand) => (
-              <div key={brand} className="flex min-h-24 items-center justify-center rounded-2xl border border-brand-100 bg-white px-5 text-xl font-bold text-brand-800 shadow-sm">
-                {brand}
+              <div
+                key={brand.name}
+                className="flex min-h-36 flex-col items-center justify-center rounded-2xl border border-brand-100 bg-white px-4 py-4 shadow-sm"
+              >
+                <h3 className="mb-3 text-center text-base font-bold text-brand-800 sm:text-lg">
+                  {brand.name}
+                </h3>
+                <div className="relative h-16 w-full sm:h-20">
+                  <Image
+                    src={brand.logo}
+                    alt={`${brand.name} logo`}
+                    fill
+                    sizes="(max-width: 640px) 40vw, 25vw"
+                    className="object-contain"
+                  />
+                </div>
               </div>
             ))}
           </div>

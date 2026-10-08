@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const productAreas = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
-const brands = ['MAK', 'HP', 'Shell', 'IndianOil'];
+const brands = ['MAK', 'HP', 'Castrol', 'Servo'];
 
 export default function AboutPage() {
   return (
@@ -29,7 +29,7 @@ export default function AboutPage() {
               Lubrication products for industrial and machine use
             </h2>
             <p className="leading-relaxed text-brand-600">
-              Our business focuses on trading and supplying industrial oils, machine oils, lubricants and greases. We deal in products from brands including MAK, HP, Shell and IndianOil.
+              Our business focuses on trading and supplying industrial oils, machine oils, lubricants and greases. We deal in products from brands including MAK, HP, Servo , Castrol and Shell.
             </p>
           </FadeIn>
           <FadeIn delay={0.1}>

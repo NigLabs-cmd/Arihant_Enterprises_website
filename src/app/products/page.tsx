@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/PageHero';
 import FadeIn from '@/components/FadeIn';
+import ProductsCatalog from '@/components/ProductsCatalog';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
@@ -8,8 +9,6 @@ export const metadata: Metadata = {
   title: 'Products',
   description: 'Browse industrial oils, machine oils, lubricants and greases. Contact us to enquire about brands, grades and pack sizes.',
 };
-
-const categories = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
 
 export default function ProductsPage() {
   return (
@@ -23,18 +22,21 @@ export default function ProductsPage() {
 
       <section className="py-20 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {categories.map((category, index) => (
-              <FadeIn key={category} delay={index * 0.07}>
-                <div className="h-full rounded-2xl border border-brand-100 bg-white p-7 shadow-sm">
-                  <h2 className="font-display text-xl font-bold text-brand-900">{category}</h2>
-                  <p className="mt-3 text-sm leading-relaxed text-brand-500">
-                    Contact us for product options, grades and pack sizes.
-                  </p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
+          <FadeIn>
+            <div className="mb-10 max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-wider text-accent-700">
+                Product catalogue
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-bold text-brand-900 md:text-4xl">
+                Lubricants from trusted brands
+              </h2>
+              <p className="mt-4 leading-relaxed text-brand-500">
+                Browse the available brands, product categories and pack sizes. Product photography
+                can be added as it becomes available.
+              </p>
+            </div>
+            <ProductsCatalog />
+          </FadeIn>
         </div>
       </section>
 

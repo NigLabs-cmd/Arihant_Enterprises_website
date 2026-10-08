@@ -1,14 +1,15 @@
 'use client';
 
-export default function WhatsAppButton() {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-  if (!phone || !/^\d{8,15}$/.test(phone)) return null;
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
-  const message = encodeURIComponent('Hello, I am interested in your industrial oils and lubricant products. Please share more details.');
+export default function WhatsAppButton() {
+  const message = 'Hello, I am interested in your industrial oils and lubricant products. Please share more details.';
+  const href = getWhatsAppUrl(message);
+  if (!href) return null;
 
   return (
     <a
-      href={`https://wa.me/${phone}?text=${message}`}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110"

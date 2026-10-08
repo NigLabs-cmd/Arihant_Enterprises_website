@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, Loader2, Send } from 'lucide-react';
 
 type Enquiry = {
@@ -26,6 +26,11 @@ export default function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const inputClass = 'w-full rounded-xl border border-brand-200 bg-white px-4 py-3.5 text-sm text-brand-800 outline-none transition-all placeholder:text-brand-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20';
 
+  useEffect(() => {
+    const product = new URLSearchParams(window.location.search).get('product')?.slice(0, 150);
+    if (product) setForm((current) => ({ ...current, product }));
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus('sending');
@@ -41,7 +46,7 @@ export default function ContactForm() {
         return;
       }
       setStatus('sent');
-      setForm(emptyEnquiry);
+      setForm({ ...emptyEnquiry, product: form.product });
     } catch {
       setStatus('error');
     }
