@@ -8,9 +8,8 @@ A premium, production-ready website template for export/trading businesses. Buil
 
 - Premium design with scroll animations (Framer Motion)
 - Fully responsive (mobile, tablet, desktop)
-- Static export — deploys anywhere (Cloudflare Pages, Vercel, Netlify)
+- Server-side contact form email delivery via Resend
 - SEO optimized (Open Graph, Twitter Cards, sitemap, robots.txt)
-- Contact form via Web3Forms (free, no backend needed)
 - WhatsApp floating button
 - 6 pages: Home, About, Products, Markets, Blog/Resources, Contact
 
@@ -40,11 +39,25 @@ All business-specific content is in **`site.config.ts`**. Update these fields:
 | `domain` | Your domain (e.g. `https://yourdomain.com`) |
 | `emails` | Your business email addresses |
 | `whatsapp` | Your WhatsApp number with country code |
-| `web3formsKey` | Your free key from [web3forms.com](https://web3forms.com) |
 | `products` | Your product catalog |
 | `markets` | Countries you serve |
 | `about` | Your company story & milestones |
 | `hero` | Homepage headline & description |
+
+### Configure contact form email
+
+The contact form sends enquiries through Resend from the Next.js API route. Copy
+`.env.example` to `.env.local` and set:
+
+| Variable | What to set |
+|----------|-------------|
+| `RESEND_API_KEY` | API key from your Resend account |
+| `NOTIFY_EMAIL` | Inbox that should receive website enquiries |
+| `FROM_EMAIL` | Sender address on a domain verified with Resend |
+
+Set the same variables in your hosting provider's environment settings. Never
+expose the Resend API key in a `NEXT_PUBLIC_` variable. The API route requires a
+server-capable Next.js deployment; static export hosting does not support it.
 
 ### Replace Images
 
@@ -65,19 +78,9 @@ Images are in `public/images/`:
 
 ## Deploy to Cloudflare Pages
 
-```bash
-# Build the static site
-npm run build
-
-# Deploy (first time — creates project)
-npx wrangler pages project create your-project-name --production-branch main
-npx wrangler pages deploy out --project-name your-project-name
-
-# Subsequent deploys
-npm run build && npx wrangler pages deploy out --project-name your-project-name
-```
-
-Then add your custom domain in Cloudflare Pages dashboard → Custom domains.
+The current contact form uses a Next.js API route and cannot run as a static
+Cloudflare Pages export. Use a server-capable Next.js host such as Vercel, or
+configure a separate Cloudflare Worker/function before deploying there.
 
 ## Deploy to Vercel
 
@@ -89,7 +92,7 @@ Or connect your GitHub repo at [vercel.com](https://vercel.com).
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (Static Export)
+- **Framework:** Next.js 14
 - **Styling:** Tailwind CSS 3.4
 - **Animations:** Framer Motion
 - **Icons:** Lucide React
@@ -128,7 +131,7 @@ Or connect your GitHub repo at [vercel.com](https://vercel.com).
 │       └── SectionHeader.tsx # Section title component
 ├── site.config.ts       # ← All business content here
 ├── tailwind.config.js   # Theme colors & design tokens
-└── next.config.js       # Next.js config (static export)
+└── next.config.js       # Next.js config
 ```
 
 ## License

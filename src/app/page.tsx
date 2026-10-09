@@ -4,10 +4,14 @@ import Link from 'next/link';
 import FadeIn from '@/components/FadeIn';
 import SectionHeader from '@/components/SectionHeader';
 import { ArrowRight, MessageCircle } from 'lucide-react';
-import makLogo from '@/app/products/Servo_image.jpg';
+import servoLogo from '@/app/products/Servo_image.jpg';
 import hpLogo from '@/app/products/HP_image.jpg';
-import servoLogo from '@/app/products/MAk_image.jpg';
+import makLogo from '@/app/products/MAk_image.jpg';
 import castrolLogo from '@/app/about/Castrol_image.png';
+import totalLogo from '@/app/products/total_image.png';
+import gulfLogo from '@/app/products/Gulf_image.png';
+import shellLogo from '@/app/products/Shell_image.jpg';
+import mobilLogo from '@/app/products/Mobil_image.png';
 
 export const metadata: Metadata = {
   title: 'Arihant Enterprises',
@@ -15,10 +19,14 @@ export const metadata: Metadata = {
 };
 
 const brands = [
-  { name: 'MAK', logo: makLogo },
-  { name: 'HP', logo: hpLogo },
   { name: 'Servo', logo: servoLogo },
+  { name: 'HP', logo: hpLogo },
+  { name: 'MAK', logo: makLogo },
   { name: 'Castrol', logo: castrolLogo },
+  { name: 'Total', logo: totalLogo },
+  { name: 'Gulf', logo: gulfLogo },
+  { name: 'Shell', logo: shellLogo },
+  { name: 'Mobil', logo: mobilLogo },
 ];
 const categories = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
 

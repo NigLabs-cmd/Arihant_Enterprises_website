@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const productAreas = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];
-const brands = ['MAK', 'HP', 'Castrol', 'Servo'];
+const brands = ['MAK', 'HP', 'Castrol', 'Servo','Mobil','Total','Gulf','Shell'];
 
 export default function AboutPage() {
   return (
@@ -41,7 +41,7 @@ export default function AboutPage() {
                 ))}
               </ul>
               <h3 className="mb-4 mt-8 font-display text-xl font-bold text-brand-900">Brands we deal in</h3>
-              <p className="text-sm leading-relaxed text-brand-600">{brands.join(' · ')} · Other brands</p>
+              <p className="text-sm leading-relaxed text-brand-600">{brands.join(' · ')} · and more</p>
             </div>
           </FadeIn>
         </div>
