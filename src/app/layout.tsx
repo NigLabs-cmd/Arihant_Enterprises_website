@@ -33,6 +33,8 @@ export const metadata: Metadata = {
     title: 'Arihant Enterprises',
     description: 'Browse industrial and machine oils, lubricants and greases.',
     type: 'website',
+    siteName: 'Arihant Enterprises',
+    locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',

@@ -6,6 +6,14 @@ import SectionHeader from '@/components/SectionHeader';
 export const metadata: Metadata = {
   title: 'About Us',
   description: 'Learn about our industrial oils, machine oils, lubricants and grease trading business.',
+  openGraph: {
+    title: 'About Arihant Enterprises',
+    description: 'Learn about our industrial oils, machine oils, lubricants and grease trading business.',
+  },
+  twitter: {
+    title: 'About Arihant Enterprises',
+    description: 'Learn about our industrial oils, machine oils, lubricants and grease trading business.',
+  },
 };
 
 const productAreas = ['Industrial Oils', 'Machine Oils', 'Lubricants', 'Greases'];

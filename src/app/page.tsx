@@ -14,8 +14,16 @@ import shellLogo from '@/app/products/Shell_image.jpg';
 import mobilLogo from '@/app/products/Mobil_image.png';
 
 export const metadata: Metadata = {
-  title: 'Arihant Enterprises',
+  title: 'Industrial Oils & Lubricants',
   description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Servo and Castrol.',
+  openGraph: {
+    title: 'Industrial Oils & Lubricants | Arihant Enterprises',
+    description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Servo and Castrol.',
+  },
+  twitter: {
+    title: 'Industrial Oils & Lubricants | Arihant Enterprises',
+    description: 'Explore industrial and machine oils, lubricants and greases from brands including MAK, HP, Servo and Castrol.',
+  },
 };
 
 const brands = [

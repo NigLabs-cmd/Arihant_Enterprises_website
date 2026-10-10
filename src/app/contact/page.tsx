@@ -6,6 +6,14 @@ import FadeIn from '@/components/FadeIn';
 export const metadata: Metadata = {
   title: 'Contact Us',
   description: 'Contact us with enquiries about industrial oils, machine oils, lubricants and greases.',
+  openGraph: {
+    title: 'Contact Arihant Enterprises',
+    description: 'Contact us with enquiries about industrial oils, machine oils, lubricants and greases.',
+  },
+  twitter: {
+    title: 'Contact Arihant Enterprises',
+    description: 'Contact us with enquiries about industrial oils, machine oils, lubricants and greases.',
+  },
 };
 
 export default function ContactPage() {

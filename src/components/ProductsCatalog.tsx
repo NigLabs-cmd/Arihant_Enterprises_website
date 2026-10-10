@@ -12,8 +12,8 @@ import { products } from '@/data/products';
 const brands = ['All brands', ...Array.from(new Set(products.map((product) => product.brand)))];
 const brandImages: Record<string, typeof hpImage | undefined> = {
   HP: hpImage,
-  'Indian Oil (IOC)': makImage,
-  BPCL: servoImage,
+  'Indian Oil (IOC)': servoImage,
+  BPCL: makImage,
 };
 
 export default function ProductsCatalog() {

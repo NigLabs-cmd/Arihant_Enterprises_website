@@ -16,9 +16,9 @@ export default function PageHero({ title, subtitle, imageSrc, imageAlt }: PageHe
         src={imageSrc}
         alt={imageAlt}
         fill
+        sizes="100vw"
         priority
         className="object-cover object-center"
-        unoptimized
       />
       <div className="hero-overlay" />
       {/* Subtle grid pattern */}

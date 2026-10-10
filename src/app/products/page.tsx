@@ -8,6 +8,14 @@ import { ArrowRight } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Products',
   description: 'Browse industrial oils, machine oils, lubricants and greases. Contact us to enquire about brands, grades and pack sizes.',
+  openGraph: {
+    title: 'Products | Arihant Enterprises',
+    description: 'Browse industrial oils, machine oils, lubricants and greases. Contact us to enquire about brands, grades and pack sizes.',
+  },
+  twitter: {
+    title: 'Products | Arihant Enterprises',
+    description: 'Browse industrial oils, machine oils, lubricants and greases. Contact us to enquire about brands, grades and pack sizes.',
+  },
 };
 
 export default function ProductsPage() {
