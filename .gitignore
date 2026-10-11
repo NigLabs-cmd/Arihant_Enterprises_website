@@ -30,3 +30,7 @@ next-env.d.ts
 
 # Misc
 *.pem
+
+# Cloudflare OpenNext build output
+.open-next/
+.dev.vars
