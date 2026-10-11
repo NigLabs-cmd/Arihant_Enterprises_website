@@ -44,7 +44,7 @@ export default function Navbar() {
             className="h-10 w-10 object-contain"
             priority
           />
-          <span className={`font-display text-sm font-bold tracking-wide sm:text-base ${isTransparent ? 'text-white' : 'text-brand-900'}`}>
+          <span className={`font-sans text-base font-bold tracking-wide ${isTransparent ? 'text-white' : 'text-brand-900'}`}>
             Arihant Enterprises
           </span>
         </Link>
