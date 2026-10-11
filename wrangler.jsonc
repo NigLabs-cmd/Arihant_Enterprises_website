@@ -1,0 +1,9 @@
+{
+  "name": "arihant-enterprises-website",
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "arihant-enterprises-website"
+    }
+  ]
+}
