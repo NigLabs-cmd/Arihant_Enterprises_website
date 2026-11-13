@@ -1,0 +1,823 @@
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { api, getUser } from "../lib/api";
+import { emptyLine, computeTotals, isHeaderLine } from "../lib/lineItemMath";
+import { formatMoney } from "../lib/format";
+import CustomerPicker from "../components/CustomerPicker";
+import LineItemsTable from "../components/LineItemsTable";
+import CollapsibleSection from "../components/CollapsibleSection";
+import InvoiceNumberSettingsModal from "../components/InvoiceNumberSettingsModal";
+import UnsavedChangesGuard from "../components/UnsavedChangesGuard";
+import { useDirtyGuard } from "../lib/useDirtyGuard";
+import { IconSettings } from "../components/Icons";
+import { GST_TREATMENTS } from "../lib/gst";
+import { CURRENCIES, currencySymbol } from "../lib/currencies";
+
+// One time id for this form session, sent with the create call (see the
+// double save note inside the component).
+function newRequestId() {
+  try {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+  } catch {
+    // fall through to the simple id below
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export default function NewInvoice() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isEdit = Boolean(id);
+  // Clone: "Clone" on an existing invoice lands here with ?cloneFrom=<id>,
+  // a brand new, unnumbered invoice pre-filled from that one (like Zoho's
+  // own Clone), not an edit of it. Ignored once already editing a real
+  // invoice, since the two modes don't make sense together.
+  const cloneFromId = !isEdit ? searchParams.get("cloneFrom") : null;
+  const [clonedFromNumber, setClonedFromNumber] = useState("");
+  const canManageItems = ["owner", "admin"].includes(getUser()?.role);
+  const [customers, setCustomers] = useState([]);
+  const [items, setItems] = useState([]);
+  const [business, setBusiness] = useState(null);
+  const isPremium = business?.plan === "premium";
+  const [customerId, setCustomerId] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState("");
+  const [reference, setReference] = useState("");
+  const [orderDate, setOrderDate] = useState("");
+  const [challanNumber, setChallanNumber] = useState("");
+  const [challanDate, setChallanDate] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
+  const [dispatchThrough, setDispatchThrough] = useState("");
+  const [subject, setSubject] = useState("");
+  const [gstin, setGstin] = useState("");
+  const [gstTreatment, setGstTreatment] = useState("gst");
+  const [terms, setTerms] = useState("");
+  const [termsAndConditions, setTermsAndConditions] = useState("");
+  const [termsTemplateId, setTermsTemplateId] = useState("custom");
+  const [termsTemplates, setTermsTemplates] = useState([]);
+  const [notes, setNotes] = useState("");
+  const [ewayBillNumber, setEwayBillNumber] = useState("");
+  const [ewayTransporterName, setEwayTransporterName] = useState("");
+  const [ewayTransporterId, setEwayTransporterId] = useState("");
+  const [ewayVehicleNumber, setEwayVehicleNumber] = useState("");
+  const [ewayDistanceKm, setEwayDistanceKm] = useState("");
+  const [currency, setCurrency] = useState("INR");
+  const [projectName, setProjectName] = useState("");
+  const [milestoneLabel, setMilestoneLabel] = useState("");
+  const [projectTotalAmount, setProjectTotalAmount] = useState("");
+  const [lines, setLines] = useState([emptyLine()]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  // Double save protection (2026-10-07). savingRef blocks a second click that
+  // lands before React has re-rendered the disabled buttons. requestIdRef is
+  // sent with the create call so the server returns the same invoice for a
+  // repeat of it instead of numbering a new one. createdInvoiceRef remembers
+  // an invoice this form already created, so a retry after a partial failure
+  // (created, but marking it Sent failed) never creates a second invoice.
+  const savingRef = useRef(false);
+  const requestIdRef = useRef(null);
+  const createdInvoiceRef = useRef(null);
+  const [loadingInvoice, setLoadingInvoice] = useState(isEdit);
+  const [loadingClone, setLoadingClone] = useState(Boolean(cloneFromId));
+  // Invoice# preview + "Configure Invoice Number Preferences" (the gear icon
+  // next to it, matching Zoho's own New Invoice screen, 2026-09-20). Only
+  // meaningful for a brand-new invoice, an edit keeps its already-assigned
+  // number, which is never shown as editable here.
+  const [nextNumberPreview, setNextNumberPreview] = useState(null);
+  const [invoiceNumberMode, setInvoiceNumberMode] = useState("auto");
+  const [manualInvoiceNumber, setManualInvoiceNumber] = useState("");
+  const [showNumberSettings, setShowNumberSettings] = useState(false);
+  // Items load asynchronously, same as the invoice/clone fetch below. A ref
+  // (rather than only the `items` state) lets whichever of those two finishes
+  // LAST still resolve each line's item name correctly. Using `items` state
+  // alone only worked when items happened to load after the invoice did; if
+  // items loaded first, the name-lookup effect further below had already run
+  // once (against the still-empty default line) and never fired again once
+  // the invoice's real lines arrived, leaving the item picker showing an
+  // empty search box even though qty/rate/amount were all correct. That's
+  // exactly what showed up on Clone right after it shipped (2026-09-20).
+  const itemsRef = useRef([]);
+
+  // Billable expenses / retainer draw-down are only offered when creating a
+  // new invoice, not when editing one.
+  const [billablePurchases, setBillablePurchases] = useState([]);
+  const [selectedPurchaseIds, setSelectedPurchaseIds] = useState([]);
+  const [retainerApplied, setRetainerApplied] = useState("");
+  // Every one of the fetches below can set a field the unsaved-changes
+  // guard's snapshot depends on (currency and Terms & Conditions both get a
+  // default filled in asynchronously, for a brand-new invoice, once these
+  // land), so the guard has to wait on all of them together rather than just
+  // on isEdit's own loadingInvoice flag, or a slow request would land after
+  // the guard already took its baseline and the form would look dirty before
+  // the user ever touched anything (2026-09-21).
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+  useEffect(() => {
+    const customersPromise = api.listCustomers().then(setCustomers);
+    const itemsPromise = api.listItems().then((list) => {
+      itemsRef.current = list;
+      setItems(list);
+    });
+    // A brand new invoice defaults to the business's own default currency —
+    // an edit in progress below overwrites this with the invoice's actual
+    // currency once it loads, so this only matters for a genuinely new
+    // invoice (2026-09-16).
+    const businessPromise = api.getBusiness().then((b) => {
+      setBusiness(b);
+      if (!isEdit) setCurrency(b.default_currency || "INR");
+    });
+    // What the next invoice's number would be if saved right now. Not
+    // meaningful for an edit, which already has its own number.
+    const nextNumberPromise = !isEdit
+      ? api.getNextInvoiceNumber().then(({ invoiceNumber, mode }) => {
+          setNextNumberPreview(invoiceNumber);
+          setInvoiceNumberMode(mode);
+          if (mode === "manual") setManualInvoiceNumber(invoiceNumber);
+        }).catch(() => {})
+      : Promise.resolve();
+    // A brand new invoice starts on whichever saved Terms & Conditions
+    // template is marked default (if any) — same "an edit overwrites this
+    // once it loads" reasoning as currency above (2026-09-16).
+    const termsPromise = api.listTermsTemplates().then((list) => {
+      setTermsTemplates(list);
+      if (!isEdit) {
+        const defaultTemplate = list.find((t) => t.is_default) || list[0];
+        if (defaultTemplate) {
+          setTermsTemplateId(defaultTemplate.id);
+          setTermsAndConditions(defaultTemplate.content);
+        }
+      }
+    });
+    Promise.all([customersPromise, itemsPromise, businessPromise, nextNumberPromise, termsPromise])
+      .then(() => setInitialDataLoaded(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Edit mode: load the existing invoice and prefill every field. Runs once
+  // per invoice id — re-picking items below (once the catalog loads) is a
+  // separate effect so this one doesn't need to wait on that.
+  useEffect(() => {
+    if (!isEdit) return;
+    setLoadingInvoice(true);
+    api.getInvoice(id).then((inv) => {
+      setCustomerId(inv.customer_id || "");
+      setCustomerName(inv.customer?.name || "");
+      setInvoiceDate(inv.invoice_date || "");
+      setDueDate(inv.due_date || "");
+      setReference(inv.reference || "");
+      setOrderDate(inv.order_date || "");
+      setChallanNumber(inv.challan_number || "");
+      setChallanDate(inv.challan_date || "");
+      setDeliveryNote(inv.delivery_note || "");
+      setDispatchThrough(inv.dispatch_through || "");
+      setSubject(inv.subject || "");
+      setGstin(inv.gstin || "");
+      setGstTreatment(inv.gst_treatment || "gst");
+      setTerms(inv.terms || "");
+      setTermsAndConditions(inv.terms_and_conditions || "");
+      setTermsTemplateId("custom");
+      setNotes(inv.notes || "");
+      setEwayBillNumber(inv.eway_bill_number || "");
+      setEwayTransporterName(inv.eway_transporter_name || "");
+      setEwayTransporterId(inv.eway_transporter_id || "");
+      setEwayVehicleNumber(inv.eway_vehicle_number || "");
+      setEwayDistanceKm(inv.eway_distance_km || "");
+      setCurrency(inv.currency || "INR");
+      setProjectName(inv.project_name || "");
+      setMilestoneLabel(inv.milestone_label || "");
+      setProjectTotalAmount(inv.project_total_amount || "");
+      setLines(
+        (inv.lineItems || []).map((li) => {
+          const match = li.item_id ? itemsRef.current.find((it) => String(it.id) === String(li.item_id)) : null;
+          return {
+            line_type: li.line_type || "item",
+            item_id: li.item_id || "",
+            // Resolved right now from whatever's already in itemsRef. If the
+            // item catalog hasn't loaded yet, the effect below (keyed on
+            // `items`) backfills it once it does.
+            item_name: li.item_name || (match ? match.name : ""),
+            description: li.description || "",
+            qty: li.qty,
+            rate: li.rate,
+            discount: li.discount,
+            tax_rate: li.tax_rate,
+            unit: li.unit || "",
+            hsn_sac_code: li.hsn_sac_code || "",
+          };
+        })
+      );
+      setLoadingInvoice(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Clone: same prefill as edit mode above, except the date is today's (not
+  // the original invoice's), due date and e-way bill details start blank
+  // (both are specific to that one shipment/timing, not something worth
+  // repeating), and this never becomes an edit of the original. Saving
+  // always creates a brand new invoice with its own fresh number.
+  useEffect(() => {
+    if (!cloneFromId) return;
+    setLoadingClone(true);
+    api.getInvoice(cloneFromId).then((inv) => {
+      setCustomerId(inv.customer_id || "");
+      setCustomerName(inv.customer?.name || "");
+      setClonedFromNumber(inv.invoice_number || "");
+      setReference(inv.reference || "");
+      setOrderDate(inv.order_date || "");
+      setChallanNumber("");
+      setChallanDate("");
+      setDeliveryNote("");
+      setDispatchThrough("");
+      setSubject(inv.subject || "");
+      setGstin(inv.gstin || "");
+      setGstTreatment(inv.gst_treatment || "gst");
+      setTerms(inv.terms || "");
+      setTermsAndConditions(inv.terms_and_conditions || "");
+      setTermsTemplateId("custom");
+      setNotes(inv.notes || "");
+      setCurrency(inv.currency || "INR");
+      setProjectName(inv.project_name || "");
+      setMilestoneLabel(inv.milestone_label || "");
+      setProjectTotalAmount(inv.project_total_amount || "");
+      setLines(
+        (inv.lineItems || []).map((li) => {
+          const match = li.item_id ? itemsRef.current.find((it) => String(it.id) === String(li.item_id)) : null;
+          return {
+            line_type: li.line_type || "item",
+            item_id: li.item_id || "",
+            // See the matching comment in the edit-mode effect above. This
+            // is what was missing before, leaving a cloned line's item
+            // picker showing an empty search box even though its qty/rate/
+            // amount were all correctly copied (2026-09-20).
+            item_name: li.item_name || (match ? match.name : ""),
+            description: li.description || "",
+            qty: li.qty,
+            rate: li.rate,
+            discount: li.discount,
+            tax_rate: li.tax_rate,
+            unit: li.unit || "",
+            hsn_sac_code: li.hsn_sac_code || "",
+          };
+        })
+      );
+      setLoadingClone(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloneFromId]);
+
+  // An invoice line only stores item_id + description, never the item's own
+  // name — so once the catalog is loaded, look up each locked line's name by
+  // its item_id purely so the ItemPicker has something to display.
+  useEffect(() => {
+    if (items.length === 0) return;
+    setLines((prev) =>
+      prev.map((line) => {
+        if (!line.item_id || line.item_name) return line;
+        const match = items.find((it) => String(it.id) === String(line.item_id));
+        return match ? { ...line, item_name: match.name } : line;
+      })
+    );
+  }, [items]);
+
+  // CustomerPicker hands back the full customer object (or null when
+  // cleared) rather than just an id, same as ItemPicker does for items.
+  const pickCustomer = (customer) => {
+    setCustomerId(customer?.id || "");
+    setCustomerName(customer?.name || "");
+    setGstin(customer?.gstin || "");
+    setSelectedPurchaseIds([]);
+    setRetainerApplied("");
+    setLines((prev) => {
+      const kept = prev.filter((l) => !l._billable_purchase_id);
+      return kept.length > 0 ? kept : [emptyLine()];
+    });
+  };
+
+  // Load this customer's billable expenses whenever the customer changes.
+  useEffect(() => {
+    if (isEdit || !customerId) {
+      setBillablePurchases([]);
+      return;
+    }
+    api.getBillablePurchases(customerId).then(setBillablePurchases).catch(() => setBillablePurchases([]));
+  }, [customerId, isEdit]);
+
+  // Selected billable expenses are tagged so unchecking removes exactly the
+  // associated invoice line rather than guessing by description text.
+  const toggleBillablePurchase = (p) => {
+    const alreadyIn = selectedPurchaseIds.includes(p.id);
+    setSelectedPurchaseIds((prev) => (alreadyIn ? prev.filter((x) => x !== p.id) : [...prev, p.id]));
+    if (alreadyIn) {
+      setLines((prev) => prev.filter((l) => l._billable_purchase_id !== p.id));
+    } else {
+      setLines((prev) => [
+        ...prev,
+        { ...emptyLine(), description: p.description || "Reimbursable expense", qty: 1, rate: p.total, _billable_purchase_id: p.id },
+      ]);
+    }
+  };
+
+  const handleCustomerCreated = (customer) => {
+    setCustomers((prev) => [...prev, customer].sort((a, b) => a.name.localeCompare(b.name)));
+    pickCustomer(customer);
+  };
+
+  // Adds a freshly created item ("+ Add New Item" from inside the line item
+  // table's own item picker) to the catalog this page already has loaded,
+  // so it shows up as a match on every other line's search too — the actual
+  // picking of it onto the line that created it happens inside
+  // LineItemsTable itself.
+  const addCatalogItem = (item) => {
+    setItems((prev) => [...prev, item].sort((a, b) => a.name.localeCompare(b.name)));
+  };
+
+  // Editing an already-picked item's own catalog details (the new "Edit
+  // Item" icon on a selected line, 2026-09-21) updates the shared catalog so
+  // every other line referencing it sees the change too. Deliberately never
+  // touches this or any other line's own rate/tax/description, the same way
+  // re-picking an already-picked item doesn't clobber text a user already
+  // typed, editing an item's catalog price isn't the same as saying this
+  // specific line should now charge that price.
+  const updateCatalogItem = (item) => {
+    setItems((prev) => prev.map((it) => (String(it.id) === String(item.id) ? item : it)).sort((a, b) => a.name.localeCompare(b.name)));
+  };
+
+  const rawTotals = computeTotals(lines);
+  const { subTotal, discountTotal, taxTotal } = rawTotals;
+  // Mirrors server/src/lib/gst.js: RCM and "no GST" don't add the tax to the
+  // amount the customer actually owes — this is just the on-screen preview,
+  // the server always recomputes and is the source of truth.
+  const total = gstTreatment === "none" ? subTotal - discountTotal
+    : gstTreatment === "rcm" ? subTotal - discountTotal
+    : rawTotals.total;
+
+  const buildPayload = () => ({
+    customer_id: customerId || null,
+    invoice_date: invoiceDate || null,
+    due_date: dueDate || null,
+    reference: reference || null,
+    order_date: orderDate || null,
+    challan_number: challanNumber || null,
+    challan_date: challanDate || null,
+    delivery_note: deliveryNote || null,
+    dispatch_through: dispatchThrough || null,
+    subject: subject || null,
+    gstin: gstin || null,
+    gst_treatment: gstTreatment,
+    terms: terms || null,
+    terms_and_conditions: termsAndConditions || null,
+    notes: notes || null,
+    currency,
+    project_name: projectName || null,
+    milestone_label: milestoneLabel || null,
+    project_total_amount: projectTotalAmount || null,
+    ...(isPremium && {
+      eway_bill_number: ewayBillNumber || null,
+      eway_transporter_name: ewayTransporterName || null,
+      eway_transporter_id: ewayTransporterId || null,
+      eway_vehicle_number: ewayVehicleNumber || null,
+      eway_distance_km: ewayDistanceKm || null,
+    }),
+    lineItems: lines.map((l) => ({ ...l, item_id: l.item_id || null })),
+    ...(!isEdit && {
+      retainer_applied: retainerApplied || null,
+      billable_purchase_ids: selectedPurchaseIds,
+      // Only reaches the server as a real number when Settings > Invoice
+      // Number Preferences is set to manual. The server ignores this
+      // entirely in auto mode, always deriving the real number from its own
+      // counter regardless of what's sent here (2026-09-20).
+      ...(invoiceNumberMode === "manual" && { invoice_number: manualInvoiceNumber || null }),
+    }),
+  });
+
+  // See useDirtyGuard's own comment: buildPayload is exactly the snapshot of
+  // "everything about this invoice that matters" the form already builds for
+  // saving, so it doubles as the dirty-check snapshot too, nothing new to
+  // keep in sync by hand as fields get added or removed later (2026-09-21).
+  const { isDirty, markClean, suppressRef } = useDirtyGuard(buildPayload, !loadingInvoice && !loadingClone && initialDataLoaded);
+
+  // A new invoice is always saved as a real, numbered document the moment
+  // it's created — "draft" vs "sent" is only ever a status label from here
+  // on, never about whether it has a number yet. So all three actions below
+  // share the same create call; they only differ in what happens right
+  // after: nothing (stays Draft), an immediate status flip to Sent with no
+  // email (mode "create" — handed over some other way), or landing on the
+  // invoice with the send popup already open (mode "send").
+  const selectedCustomer = customers.find((c) => String(c.id) === String(customerId));
+  const customerHasEmail = Boolean(selectedCustomer?.email);
+
+  // mode: "draft" | "create" | "send" (ignored entirely in edit mode, which
+  // only ever has the one "Save Changes" action). Split out from submit()
+  // below so the unsaved-changes guard's own "Save & Leave" button can run
+  // the same validation and the same save, without also running submit()'s
+  // own post-save navigate() to the invoice's view page, since Save & Leave
+  // should land wherever the user was actually trying to go, not there.
+  const validate = (mode) => {
+    // No more "walk-in / no customer" invoices — every BillItUp invoice is a
+    // real GST document billed to someone, so a customer is required before
+    // this ever reaches the server (which enforces the same rule).
+    if (!customerId) return "Please select or add a customer before creating this invoice.";
+    if (mode === "send" && !customerHasEmail) {
+      return "This customer has no email on file — add one to their record, or use Create instead and send the invoice another way.";
+    }
+    if (lines.filter((l) => !isHeaderLine(l)).length === 0) {
+      return "Add at least one line item (a header alone is not enough).";
+    }
+    return "";
+  };
+
+  const performSave = async (mode) => {
+    if (isEdit) {
+      await api.updateInvoice(id, buildPayload());
+      return null;
+    }
+    let invoice = createdInvoiceRef.current;
+    if (!invoice) {
+      if (!requestIdRef.current) requestIdRef.current = newRequestId();
+      invoice = await api.createInvoice({ ...buildPayload(), client_request_id: requestIdRef.current });
+      createdInvoiceRef.current = invoice;
+    } else if (["owner", "admin"].includes(getUser()?.role)) {
+      // This form already created the invoice on an earlier attempt that did
+      // not finish. Apply whatever has changed since to that same invoice.
+      await api.updateInvoice(invoice.id, buildPayload());
+    }
+    if (mode === "create") {
+      await api.setInvoiceStatus(invoice.id, "sent");
+    }
+    return invoice;
+  };
+
+  const submit = async (mode) => {
+    if (savingRef.current) return;
+    setError("");
+    const validationError = validate(mode);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    savingRef.current = true;
+    setSaving(mode);
+    try {
+      const invoice = await performSave(mode);
+      markClean();
+      if (isEdit) {
+        navigate(`/invoices/${id}`);
+        return;
+      }
+      navigate(mode === "send" ? `/invoices/${invoice.id}?send=1` : `/invoices/${invoice.id}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  };
+
+  // The default save used by "Save & Leave" on the unsaved-changes prompt: a
+  // brand-new invoice saves as a Draft (the least committal of the three
+  // actions, never sends anything), an edit just runs its one save action.
+  // Throws on failure (rather than setting `error` and swallowing it) so the
+  // prompt itself can show the problem and stay open instead of discarding
+  // the user's changes anyway.
+  const handleSaveAndLeave = async () => {
+    const mode = isEdit ? undefined : "draft";
+    const validationError = validate(mode);
+    if (validationError) {
+      setError(validationError);
+      throw new Error(validationError);
+    }
+    if (savingRef.current) throw new Error("A save is already in progress. Wait a moment, then try again.");
+    setError("");
+    savingRef.current = true;
+    try {
+      await performSave(mode);
+      markClean();
+    } finally {
+      savingRef.current = false;
+    }
+  };
+
+  const symbol = currencySymbol(currency);
+  const userRole = getUser()?.role;
+  // Boolean(...) matters here — SQLite stores require_invoice_approval as an
+  // integer 0/1, not a real boolean, so "false" was actually the NUMBER 0.
+  // React renders {0 && ...} as the literal text "0" (only false/null/
+  // undefined are skipped), which is exactly the stray "0" that showed up
+  // under the New Invoice heading for any business with the setting off
+  // (2026-09-16).
+  const willNeedApproval = Boolean(!isEdit && business?.require_invoice_approval && !["owner", "admin"].includes(userRole));
+  const retainerBalance = Number(selectedCustomer?.retainer_balance) || 0;
+
+  if (loadingInvoice || loadingClone) return <p className="muted">Loading...</p>;
+
+  const hasMilestoneData = !!(projectName || milestoneLabel || projectTotalAmount);
+  const hasEwayData = !!(ewayBillNumber || ewayVehicleNumber || ewayTransporterName || ewayTransporterId || ewayDistanceKm);
+
+  return (
+    <div>
+      <h1>{isEdit ? "Edit Invoice" : "New Invoice"}</h1>
+      {isEdit && (
+        <p className="muted">
+          Saving will recalculate this invoice's total. The previous version is kept — see Edit History on the
+          invoice once you're done.
+        </p>
+      )}
+      {willNeedApproval && (
+        <p className="muted">This invoice will need Owner/Admin approval before it can be sent.</p>
+      )}
+      {clonedFromNumber && (
+        <p className="muted">
+          Pre-filled from invoice {clonedFromNumber}. Review the customer, lines, and dates below. Saving this
+          creates a brand new invoice with its own number.
+        </p>
+      )}
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="invoice-form-grid">
+          <div className="invoice-form-main">
+            <section className="form-card">
+              <h2>Invoice Details</h2>
+              <div className="form-row">
+                <label className="block" data-tour="invoice-customer-picker">Customer
+                  <CustomerPicker
+                    customers={customers}
+                    customerId={customerId}
+                    customerName={customerName}
+                    onSelect={pickCustomer}
+                    onCreated={handleCustomerCreated}
+                  />
+                </label>
+                {!isEdit && (
+                  <label className="block">Invoice#
+                    <div className="invoice-number-field">
+                      {invoiceNumberMode === "manual" ? (
+                        <input
+                          value={manualInvoiceNumber}
+                          onChange={(e) => setManualInvoiceNumber(e.target.value)}
+                          placeholder={nextNumberPreview || "Invoice number"}
+                        />
+                      ) : (
+                        <input value={nextNumberPreview || "..."} disabled title="Assigned automatically when this invoice is saved" />
+                      )}
+                      {canManageItems && (
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          title="Configure Invoice Number Preferences"
+                          onClick={() => setShowNumberSettings(true)}
+                        >
+                          <IconSettings size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </label>
+                )}
+                <label className="block">Invoice date
+                  <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
+                </label>
+                <label className="block">Due date (optional)
+                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                </label>
+                <label className="block">PO / Reference number (optional)
+                  <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. PO-4021" />
+                </label>
+              </div>
+              <label className="block" style={{ maxWidth: "none" }}>Subject (optional)
+                <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Let your customer know what this invoice is for" />
+              </label>
+            </section>
+
+            <CollapsibleSection
+              title="Order & Delivery References"
+              defaultOpen={isEdit || Boolean(cloneFromId) || Boolean(orderDate || challanNumber || challanDate || deliveryNote || dispatchThrough)}
+            >
+              <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+                Optional order and dispatch details printed in the invoice references panel.
+              </p>
+              <div className="form-row">
+                <label className="block">Order date
+                  <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
+                </label>
+                <label className="block">Challan number
+                  <input value={challanNumber} onChange={(e) => setChallanNumber(e.target.value)} />
+                </label>
+                <label className="block">Challan date
+                  <input type="date" value={challanDate} onChange={(e) => setChallanDate(e.target.value)} />
+                </label>
+                <label className="block">Delivery note
+                  <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} />
+                </label>
+                <label className="block">Dispatch through
+                  <input value={dispatchThrough} onChange={(e) => setDispatchThrough(e.target.value)} placeholder="e.g. Own Vehicle" />
+                </label>
+              </div>
+            </CollapsibleSection>
+
+            <section className="form-card">
+              <h2>Line Items</h2>
+              <LineItemsTable
+                lines={lines}
+                setLines={setLines}
+                items={items}
+                canManageItems={canManageItems}
+                onItemCreated={addCatalogItem}
+                onItemUpdated={updateCatalogItem}
+                showHsnUnit
+                symbol={symbol}
+              />
+
+              {gstTreatment === "rcm" && (
+                <p className="muted">
+                  Reverse charge: the tax below is shown for your customer's own GST filing, but is not added to what
+                  they owe you. They pay that GST directly to the government.
+                </p>
+              )}
+              {gstTreatment === "none" && (
+                <p className="muted">No GST will be added to this invoice, whatever tax % is set on a line above.</p>
+              )}
+
+              <div className="totals-box">
+                <div><span>Sub Total</span><span>{symbol}{formatMoney(subTotal)}</span></div>
+                <div><span>Discount</span><span>-{symbol}{formatMoney(discountTotal)}</span></div>
+                <div><span>{gstTreatment === "rcm" ? "Tax (reverse charge)" : "Tax"}</span><span>{symbol}{formatMoney(gstTreatment === "none" ? 0 : taxTotal)}</span></div>
+                <div className="grand-total"><span>Total</span><span>{symbol}{formatMoney(total)}</span></div>
+              </div>
+            </section>
+
+            <section className="form-card">
+              <h2>Terms &amp; Notes</h2>
+              <label className="block" style={{ maxWidth: "none" }}>Payment Terms (optional)
+                <input value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="e.g. Net 15" />
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>Notes (optional, shown on the invoice)
+                <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>Terms &amp; Conditions (optional, printed on the invoice)
+                <select
+                  value={termsTemplateId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setTermsTemplateId(id);
+                    if (id !== "custom") {
+                      const picked = termsTemplates.find((t) => String(t.id) === String(id));
+                      if (picked) setTermsAndConditions(picked.content);
+                    }
+                  }}
+                >
+                  {termsTemplates.map((t) => <option key={t.id} value={t.id}>{t.title}{t.is_default ? " (default)" : ""}</option>)}
+                  <option value="custom">Custom text</option>
+                </select>
+              </label>
+              {termsTemplates.length === 0 && (
+                <p className="muted" style={{ marginTop: -8, fontSize: 13 }}>
+                  Save a reusable Terms &amp; Conditions template in Settings to pick from here next time.
+                </p>
+              )}
+              <label className="block" style={{ maxWidth: "none" }}>
+                <textarea rows={4} value={termsAndConditions} onChange={(e) => { setTermsAndConditions(e.target.value); setTermsTemplateId("custom"); }} />
+              </label>
+            </section>
+          </div>
+
+          <div className="invoice-form-sidebar">
+            <section className="form-card">
+              <h2>Invoice Settings</h2>
+              <label className="block" style={{ maxWidth: "none" }}>Currency
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                  {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>)}
+                </select>
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>GST Number (optional)
+                <input value={gstin} onChange={(e) => setGstin(e.target.value)} placeholder="Defaults from the customer's GSTIN" />
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>GST Treatment
+                <select value={gstTreatment} onChange={(e) => setGstTreatment(e.target.value)}>
+                  {GST_TREATMENTS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </label>
+            </section>
+
+            <CollapsibleSection title="Project / Milestone Billing" defaultOpen={isEdit && hasMilestoneData}>
+              <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+                Billing a project in stages? Give it a name and, optionally, a total value — every invoice you raise
+                with the same project name (for this customer) is added up automatically and shown on each one.
+              </p>
+              <label className="block" style={{ maxWidth: "none" }}>Project name
+                <input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="e.g. Website Redesign" />
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>Milestone label
+                <input value={milestoneLabel} onChange={(e) => setMilestoneLabel(e.target.value)} placeholder="e.g. Milestone 1 of 3, Advance" />
+              </label>
+              <label className="block" style={{ maxWidth: "none" }}>Project total (optional)
+                <input type="number" step="0.01" value={projectTotalAmount} onChange={(e) => setProjectTotalAmount(e.target.value)} placeholder={`Total ${currency} value of the whole project`} />
+              </label>
+            </CollapsibleSection>
+
+            {!isEdit && customerId && (billablePurchases.length > 0 || retainerBalance > 0) && (
+              <section className="form-card">
+                <h2>Billable Expenses &amp; Retainer</h2>
+                {billablePurchases.length > 0 && (
+                  <div className="block">
+                    <p className="muted" style={{ marginTop: 0, marginBottom: 4, fontSize: 13 }}>Add billable expenses logged for this customer:</p>
+                    {billablePurchases.map((p) => (
+                      <label key={p.id} className="checkbox-row">
+                        <input type="checkbox" checked={selectedPurchaseIds.includes(p.id)} onChange={() => toggleBillablePurchase(p)} />
+                        {p.purchase_date}: {p.description || "Expense"}, {symbol}{formatMoney(p.total)}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {retainerBalance > 0 && (
+                  <label className="block" style={{ maxWidth: "none" }}>
+                    Apply from retainer balance ({symbol}{formatMoney(retainerBalance)} available)
+                    <input
+                      type="number" step="0.01" min="0" max={retainerBalance}
+                      value={retainerApplied}
+                      onChange={(e) => setRetainerApplied(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </label>
+                )}
+              </section>
+            )}
+
+            {isPremium ? (
+              <CollapsibleSection title="E-Way Bill Details" defaultOpen={isEdit && hasEwayData}>
+                <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+                  TradeLedger doesn't generate the e-way bill itself — record the details of one you've already generated
+                  on the government portal, and it will show on this invoice.
+                </p>
+                <label className="block" style={{ maxWidth: "none" }}>E-Way Bill Number
+                  <input value={ewayBillNumber} onChange={(e) => setEwayBillNumber(e.target.value)} />
+                </label>
+                <label className="block" style={{ maxWidth: "none" }}>Vehicle Number
+                  <input value={ewayVehicleNumber} onChange={(e) => setEwayVehicleNumber(e.target.value)} placeholder="e.g. TN09AB1234" />
+                </label>
+                <label className="block" style={{ maxWidth: "none" }}>Transporter Name
+                  <input value={ewayTransporterName} onChange={(e) => setEwayTransporterName(e.target.value)} />
+                </label>
+                <label className="block" style={{ maxWidth: "none" }}>Transporter ID (GSTIN, optional)
+                  <input value={ewayTransporterId} onChange={(e) => setEwayTransporterId(e.target.value)} />
+                </label>
+                <label className="block" style={{ maxWidth: "none" }}>Distance (km, optional)
+                  <input type="number" step="0.1" value={ewayDistanceKm} onChange={(e) => setEwayDistanceKm(e.target.value)} />
+                </label>
+              </CollapsibleSection>
+            ) : (
+              business && (
+                <p className="muted">
+                  E-Way Bill tracking for invoices involving goods movement is a premium feature. Get in touch to
+                  upgrade — everything else stays free.
+                </p>
+              )
+            )}
+          </div>
+        </div>
+
+        {error && <p className="error">{error}</p>}
+        {isEdit ? (
+          <button type="button" disabled={saving} onClick={() => submit("create")}>
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        ) : (
+          <div className="form-submit-row">
+            <button type="button" className="btn-secondary" disabled={saving} onClick={() => submit("draft")}>
+              {saving === "draft" ? "Saving..." : "Save as Draft"}
+            </button>
+            <button type="button" className="btn-secondary" disabled={saving} onClick={() => submit("create")}>
+              {saving === "create" ? "Creating..." : "Create"}
+            </button>
+            <button type="button" disabled={saving || !customerHasEmail} title={!customerHasEmail ? "Add an email to this customer first" : undefined} onClick={() => submit("send")}>
+              {saving === "send" ? "Sending..." : "Create and Send"}
+            </button>
+            {customerId && !customerHasEmail && (
+              <p className="muted">This customer has no email on file, so Create and Send is disabled — add one on the Customers page, or use Create instead.</p>
+            )}
+          </div>
+        )}
+      </form>
+
+      {showNumberSettings && business && (
+        <InvoiceNumberSettingsModal
+          business={business}
+          onClose={() => setShowNumberSettings(false)}
+          onSaved={(updated) => {
+            setBusiness(updated);
+            setInvoiceNumberMode(updated.invoice_number_mode || "auto");
+            setShowNumberSettings(false);
+            // The prefix/next-number/mode may have just changed. Refetch the
+            // preview rather than trying to recompute it by hand here.
+            api.getNextInvoiceNumber().then(({ invoiceNumber, mode }) => {
+              setNextNumberPreview(invoiceNumber);
+              setInvoiceNumberMode(mode);
+              if (mode === "manual") setManualInvoiceNumber(invoiceNumber);
+            }).catch(() => {});
+          }}
+        />
+      )}
+      <UnsavedChangesGuard isDirty={isDirty} onSaveAndLeave={handleSaveAndLeave} suppressRef={suppressRef} />
+    </div>
+  );
+}

@@ -1,0 +1,559 @@
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { api, getUser } from "../lib/api";
+import { getTemplate, mergeTemplate } from "../lib/emailTemplates";
+import { buildWhatsappUrl } from "../lib/whatsapp";
+import { currencySymbol } from "../lib/currencies";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
+import SendDocumentModal from "./SendDocumentModal";
+import ConfirmDialog from "./ConfirmDialog";
+import RecordPaymentForm from "./RecordPaymentForm";
+import FullInvoice from "./FullInvoice";
+import EditHistory from "./EditHistory";
+import InvoiceComments from "./InvoiceComments";
+
+const GST_IMS_STATUSES = [
+  { value: "", label: "Not set" },
+  { value: "pending", label: "Pending" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+];
+
+// Standard GST Rule 48(6) copy labels for a tax invoice: 1 copy needs no
+// label at all, 2 is the services convention (no Transporter copy), 3 is
+// the goods-movement convention. Naveen's own ask, 2026-09-22.
+const PRINT_COPY_LABELS = {
+  2: ["ORIGINAL FOR RECIPIENT", "DUPLICATE FOR SUPPLIER"],
+  3: ["ORIGINAL FOR RECIPIENT", "DUPLICATE FOR TRANSPORTER", "TRIPLICATE FOR SUPPLIER"],
+};
+
+// The invoice detail pane: toolbar (Edit / Send / Share / Reminder /
+// Print-PDF / Record Payment) plus the actual A4 document. Used both by the
+// standalone /invoices/:id page and embedded as the right-hand pane of the
+// master-detail Invoices list on the Dashboard, so the two never diverge.
+export default function InvoiceDetail({ invoiceId, onChanged, standalone = false }) {
+  const navigate = useNavigate();
+  const canEdit = ["owner", "admin"].includes(getUser()?.role);
+  const [invoice, setInvoice] = useState(null);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
+  const [reminderResult, setReminderResult] = useState(null);
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [confirmingMarkSent, setConfirmingMarkSent] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState("");
+  const [approving, setApproving] = useState(false);
+  const [gstImsBusy, setGstImsBusy] = useState(false);
+  const [recordPaymentSignal, setRecordPaymentSignal] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoSendConsumed = useRef(false);
+
+  // How many copies "Print / Save PDF" renders (Original/Duplicate/
+  // Triplicate, per GST Rule 48(6)), starting from the business's own
+  // default_print_copies setting but adjustable per print (Naveen's own
+  // ask, 2026-09-22). Invoice-only, same as the Ship To address above.
+  const [printCopies, setPrintCopies] = useState(1);
+
+  // Returns the freshly-loaded invoice too, not just via state — recordPayment
+  // needs the up-to-date customer email right after a payment, before the
+  // next render, to decide whether to offer a receipt.
+  const load = () => api.getInvoice(invoiceId).then((data) => {
+    setInvoice(data);
+    return data;
+  });
+  useEffect(() => {
+    setInvoice(null);
+    setReminderResult(null);
+    setError("");
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoiceId]);
+
+  // Picks up the business's default once this invoice has loaded. Keyed on
+  // invoice.id rather than the whole invoice object, so re-fetching the same
+  // invoice (after recording a payment, say) never overwrites a copies count
+  // Naveen has already changed by hand for this print.
+  useEffect(() => {
+    if (invoice?.business?.default_print_copies) setPrintCopies(invoice.business.default_print_copies);
+  }, [invoice?.id, invoice?.business?.default_print_copies]);
+
+  // Only for the standalone /invoices/:id page, not the embedded pane in the
+  // Dashboard's master-detail list, the tab there is the Dashboard's own,
+  // and shouldn't change just because a different row is selected.
+  useDocumentTitle(standalone && invoice ? invoice.invoice_number : null);
+
+  // "Create and Send" on the New Invoice page creates the invoice, then
+  // lands here with ?send=1 so the send popup opens immediately instead of
+  // making the user find the button themselves. Guarded by a ref (not just
+  // the invoice state) so a later refresh() — recording a payment, say —
+  // never reopens it a second time.
+  useEffect(() => {
+    if (invoice && !autoSendConsumed.current && searchParams.get("send") === "1") {
+      autoSendConsumed.current = true;
+      setShowSendModal(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("send");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
+
+  useEffect(() => {
+    // Always set the A4 @page size, whether this is the standalone
+    // /invoices/:id page or the embedded pane inside the Dashboard's
+    // master-detail Invoices list — printing from either place should
+    // produce the same A4 document.
+    let styleTag = document.getElementById("dynamic-print-style");
+    if (!styleTag) {
+      styleTag = document.createElement("style");
+      styleTag.id = "dynamic-print-style";
+      document.head.appendChild(styleTag);
+    }
+    styleTag.textContent = `@page { size: A4; margin: 12mm; }`;
+  }, []);
+
+  if (!invoice) return <p className="muted">Loading...</p>;
+
+  const refresh = async () => {
+    const data = await load();
+    onChanged?.();
+    return data;
+  };
+
+  // Pre-fills the send popup with the business's own saved template (or the
+  // built-in default), merged with this invoice's real numbers — so what
+  // the popup shows is exactly what would go out, not raw {{placeholders}}.
+  const sendTemplate = getTemplate(invoice.business, "invoice");
+  const sendVars = {
+    business_name: invoice.business?.name || "",
+    customer_name: invoice.customer?.name || "there",
+    document_number: invoice.invoice_number,
+    amount: Number(invoice.total).toFixed(2),
+    balance_due: Number(invoice.balance_due).toFixed(2),
+    due_date: invoice.due_date ? ` (due ${invoice.due_date})` : "",
+  };
+  const sendDefaults = {
+    subject: mergeTemplate(sendTemplate.subject, sendVars),
+    body: mergeTemplate(sendTemplate.body, sendVars),
+  };
+
+  // Same pre-fill approach as sendDefaults above, for the "payment received"
+  // receipt popup that opens right after a payment is recorded.
+  const receiptTemplate = getTemplate(invoice.business, "receipt");
+  const receiptVars = {
+    business_name: invoice.business?.name || "",
+    customer_name: invoice.customer?.name || "there",
+    document_number: invoice.invoice_number,
+    amount: Number(invoice.total).toFixed(2),
+    amount_paid: Number(invoice.total - invoice.balance_due).toFixed(2),
+    balance_due: Number(invoice.balance_due).toFixed(2),
+    status_line: invoice.balance_due > 0
+      ? ` A balance of ${currencySymbol(invoice.currency)}${Number(invoice.balance_due).toFixed(2)} is still outstanding.`
+      : " Your invoice is now fully paid.",
+  };
+  const receiptDefaults = {
+    subject: mergeTemplate(receiptTemplate.subject, receiptVars),
+    body: mergeTemplate(receiptTemplate.body, receiptVars),
+  };
+
+  // After a payment is saved, offer to email a receipt right away — but only
+  // when there's actually somewhere to send it. No customer email on file is
+  // not an error, just a reason to skip the popup and say why in its place.
+  const recordPayment = async (payload) => {
+    setError("");
+    setPaymentNotice("");
+    try {
+      await api.recordPayment(invoiceId, payload);
+      const updated = await refresh();
+      if (updated?.customer?.email) {
+        setShowReceiptModal(true);
+      } else {
+        setPaymentNotice("Payment recorded. Add an email address to this customer to send a receipt for it.");
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const shareUrl = invoice.public_token ? `${window.location.origin}/view/invoice/${invoice.public_token}` : null;
+  const copyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this link:", shareUrl);
+    }
+  };
+
+  // WhatsApp is how most customers actually get contacted day to day — a
+  // ready-to-send message plus the same shareable link, opened straight in
+  // the customer's own chat when their phone number is on file (2026-09-16).
+  const symbol = currencySymbol(invoice.currency);
+  const whatsappShareUrl = shareUrl
+    ? buildWhatsappUrl(
+        invoice.customer?.phone,
+        `Hi ${invoice.customer?.name || "there"}, here is invoice ${invoice.invoice_number} from ${invoice.business?.name || "us"} for ${symbol}${Number(invoice.total).toFixed(2)}. View and download it here: ${shareUrl}`
+      )
+    : null;
+  const whatsappReminderUrl = shareUrl && invoice.balance_due > 0
+    ? buildWhatsappUrl(
+        invoice.customer?.phone,
+        `Hi ${invoice.customer?.name || "there"}, a quick reminder that invoice ${invoice.invoice_number} from ${invoice.business?.name || "us"} has a balance of ${symbol}${Number(invoice.balance_due).toFixed(2)}${invoice.due_date ? ` (due ${invoice.due_date})` : ""} still pending. View and pay here: ${shareUrl}`
+      )
+    : null;
+
+  const cancelInvoice = async () => {
+    setError("");
+    setStatusBusy(true);
+    try {
+      await api.setInvoiceStatus(invoiceId, "cancelled");
+      setConfirmingCancel(false);
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  // A real, permanent delete, different from Cancel above, which only ever
+  // changes status and never removes anything. Meant for cleaning up a
+  // mistake, a duplicate, or test/sample invoices (any status, including
+  // Paid: Cancel already covers "this real invoice is no longer valid",
+  // this is for "this invoice shouldn't have existed at all"). Blocked
+  // server-side if a credit note was issued against it (see routes/invoices.js).
+  const deleteInvoice = async () => {
+    setError("");
+    setDeleteBusy(true);
+    try {
+      await api.deleteInvoice(invoiceId);
+      setConfirmingDelete(false);
+      if (standalone) {
+        navigate("/");
+        return;
+      }
+      // Embedded in the Dashboard's master-detail list. This same component
+      // instance sticks around and gets handed a different invoiceId once
+      // the parent's list reloads, so its own busy flag needs resetting here
+      // rather than relying on an unmount that won't happen.
+      onChanged?.();
+      setDeleteBusy(false);
+    } catch (err) {
+      setError(err.message);
+      setDeleteBusy(false);
+    }
+  };
+
+  const reopenInvoice = async () => {
+    setError("");
+    setStatusBusy(true);
+    try {
+      await api.setInvoiceStatus(invoiceId, "draft");
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  // For a draft that was handed to the customer some other way — in person,
+  // WhatsApp, printed and posted — rather than emailed from here. Doesn't
+  // send anything itself, just moves the invoice out of Draft so it stops
+  // looking unfinished on the Dashboard.
+  const markAsSent = async () => {
+    setError("");
+    setStatusBusy(true);
+    try {
+      await api.setInvoiceStatus(invoiceId, "sent");
+      setConfirmingMarkSent(false);
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  // Owner/Admin clearing the approval gate set in Settings > require an
+  // internal approval before an invoice can be sent (2026-09-16) — see
+  // routes/invoices.js's PUT /:id/approve, which also re-checks the role
+  // server-side rather than trusting this button alone.
+  const approveInvoice = async () => {
+    setError("");
+    setApproving(true);
+    try {
+      await api.approveInvoice(invoiceId);
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const setGstImsStatus = async (status) => {
+    setError("");
+    setGstImsBusy(true);
+    try {
+      await api.setInvoiceGstImsStatus(invoiceId, status);
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGstImsBusy(false);
+    }
+  };
+
+  const sendReminder = async () => {
+    setSendingReminder(true);
+    setReminderResult(null);
+    try {
+      const res = await api.sendInvoiceEmail(invoiceId, { to: invoice.customer?.email, reminder: true });
+      setReminderResult({ ok: true, to: res.sentTo });
+    } catch (err) {
+      setReminderResult({ error: err.message });
+    } finally {
+      setSendingReminder(false);
+    }
+  };
+
+  // A diagonal corner ribbon on the document preview, on-screen only — see
+  // .status-ribbon in index.css. Cancelled already gets its own big stamp on
+  // the document itself, so it doesn't need a ribbon too (2026-09-16).
+  const ribbonTone = invoice.status === "cancelled" ? null
+    : invoice.status === "paid" ? "paid"
+    : invoice.is_overdue ? "overdue"
+    : invoice.status === "partially_paid" ? "partially_paid"
+    : invoice.status === "sent" ? "sent"
+    : "draft";
+  const RIBBON_TEXT = { draft: "Draft", sent: "Sent", partially_paid: "Partially Paid", paid: "Paid", overdue: "Overdue" };
+
+  // A single contextual nudge toward whatever's next for this invoice —
+  // matches the "What's next?" banner Zoho shows above its own invoice
+  // preview. Skipped once it's cancelled, or while it's still waiting on the
+  // separate internal-approval banner above, so the two never stack.
+  let nextStep = null;
+  if (invoice.approval_status !== "pending" && invoice.status !== "cancelled") {
+    if (invoice.status === "draft") {
+      nextStep = {
+        text: "This invoice hasn't been sent yet. Email it to your customer when you're ready.",
+        actionLabel: "Email to Customer",
+        onAction: () => setShowSendModal(true),
+      };
+    } else if (invoice.balance_due > 0 && ["sent", "partially_paid"].includes(invoice.status)) {
+      nextStep = {
+        text: "This invoice has been sent. Record a payment for it as soon as you receive one.",
+        actionLabel: "Record Payment",
+        onAction: () => setRecordPaymentSignal((s) => s + 1),
+      };
+    }
+  }
+
+  // Everything in the toolbar reads as one consistent family of compact
+  // outline chips (see .toolbar-btn in index.css) instead of the old mix of
+  // plain text links, solid green buttons, and outlined buttons all sitting
+  // next to each other. Only whichever single action matches the "What's
+  // next?" banner above gets the solid, filled treatment, so there's always
+  // at most one obviously-primary action rather than half a dozen equally
+  // loud green buttons (2026-09-16).
+  const primaryToolbarAction = nextStep?.actionLabel || null;
+  const toolbarBtnClass = (label) =>
+    `toolbar-btn${label && label === primaryToolbarAction ? " toolbar-btn-primary" : ""}`;
+
+  return (
+    <div>
+      <div className="no-print toolbar invoice-toolbar">
+        {!standalone && (
+          <Link className="toolbar-btn" to={`/invoices/${invoiceId}`} title="Open in its own page">↗ Open</Link>
+        )}
+        {canEdit && <Link className="toolbar-btn" to={`/invoices/${invoiceId}/edit`}>Edit</Link>}
+        <Link className="toolbar-btn" to={`/invoices/new?cloneFrom=${invoiceId}`} title="Start a new invoice pre-filled from this one">Clone</Link>
+        <select
+          className="toolbar-btn no-print"
+          value={printCopies}
+          onChange={(e) => setPrintCopies(Number(e.target.value))}
+          title="How many copies to print (Original/Duplicate/Triplicate)"
+        >
+          <option value={1}>1 copy</option>
+          <option value={2}>2 copies</option>
+          <option value={3}>3 copies</option>
+        </select>
+        <button type="button" className="toolbar-btn" onClick={() => window.print()}>Print / Save PDF</button>
+        {invoice.approval_status !== "pending" && (
+          <button type="button" className={toolbarBtnClass("Email to Customer")} onClick={() => setShowSendModal(true)}>
+            Email to Customer
+          </button>
+        )}
+        {shareUrl && (
+          <button type="button" className="toolbar-btn" onClick={copyLink}>{copied ? "Link copied!" : "Copy shareable link"}</button>
+        )}
+        {whatsappShareUrl && (
+          <a className="toolbar-btn" href={whatsappShareUrl} target="_blank" rel="noreferrer">Share via WhatsApp</a>
+        )}
+        {invoice.balance_due > 0 && !["draft", "cancelled"].includes(invoice.status) && (
+          <button type="button" className="toolbar-btn" onClick={sendReminder} disabled={sendingReminder}>
+            {sendingReminder ? "Sending..." : "Send Payment Reminder"}
+          </button>
+        )}
+        {whatsappReminderUrl && !["draft", "cancelled"].includes(invoice.status) && (
+          <a className="toolbar-btn" href={whatsappReminderUrl} target="_blank" rel="noreferrer">Remind via WhatsApp</a>
+        )}
+        {invoice.balance_due > 0 && invoice.status !== "cancelled" && (
+          <RecordPaymentForm
+            balanceDue={invoice.balance_due}
+            onRecord={recordPayment}
+            openSignal={recordPaymentSignal}
+            triggerClassName={toolbarBtnClass("Record Payment")}
+          />
+        )}
+        {canEdit && invoice.status === "draft" && invoice.approval_status !== "pending" && (
+          <button type="button" className="toolbar-btn" onClick={() => setConfirmingMarkSent(true)}>
+            Mark as Sent
+          </button>
+        )}
+        {canEdit && invoice.status !== "cancelled" && !confirmingCancel && (
+          <button type="button" className="toolbar-btn toolbar-btn-danger" onClick={() => setConfirmingCancel(true)}>
+            Cancel Invoice
+          </button>
+        )}
+        {canEdit && confirmingCancel && (
+          <span className="inline-confirm">
+            Cancel this invoice?
+            <button type="button" className="toolbar-btn btn-danger" onClick={cancelInvoice} disabled={statusBusy}>{statusBusy ? "Cancelling..." : "Yes, cancel it"}</button>
+            <button type="button" className="toolbar-btn" onClick={() => setConfirmingCancel(false)} disabled={statusBusy}>No</button>
+          </span>
+        )}
+        {canEdit && invoice.status === "cancelled" && (
+          <button type="button" className="toolbar-btn" onClick={reopenInvoice} disabled={statusBusy}>{statusBusy ? "Reopening..." : "Reopen (mark as Draft)"}</button>
+        )}
+        {canEdit && (
+          <button type="button" className="toolbar-btn toolbar-btn-danger" onClick={() => setConfirmingDelete(true)} title="Permanently delete this invoice">
+            Delete
+          </button>
+        )}
+      </div>
+      {invoice.approval_status === "pending" && (
+        <div className="no-print banner banner-warning">
+          This invoice needs Owner/Admin approval before it can be sent.
+          {canEdit && (
+            <button type="button" onClick={approveInvoice} disabled={approving}>
+              {approving ? "Approving..." : "Approve Invoice"}
+            </button>
+          )}
+        </div>
+      )}
+      {nextStep && (
+        <div className="no-print banner-next-step">
+          <div className="banner-next-step-text">
+            <span className="banner-next-step-eyebrow">What's next?</span>
+            {nextStep.text}
+          </div>
+          <button type="button" onClick={nextStep.onAction}>{nextStep.actionLabel}</button>
+        </div>
+      )}
+      {invoice.last_viewed_at && (
+        <p className="muted no-print">
+          Viewed by client on {new Date(invoice.first_viewed_at).toLocaleString()}
+          {invoice.last_viewed_at !== invoice.first_viewed_at && ` (last viewed ${new Date(invoice.last_viewed_at).toLocaleString()})`}
+        </p>
+      )}
+      {reminderResult?.ok && <p className="muted no-print">Reminder sent to {reminderResult.to}.</p>}
+      {reminderResult?.error && <p className="error no-print">{reminderResult.error}</p>}
+      {paymentNotice && <p className="muted no-print">{paymentNotice}</p>}
+      {error && <p className="error no-print">{error}</p>}
+
+      {canEdit && (
+        <label className="block no-print invoice-gst-ims">
+          GST IMS Status
+          <select
+            value={invoice.gst_ims_status || ""}
+            onChange={(e) => setGstImsStatus(e.target.value)}
+            disabled={gstImsBusy}
+          >
+            {GST_IMS_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+      )}
+
+      <div className="invoice-doc-wrap">
+        {ribbonTone && (
+          <span className={`status-ribbon status-ribbon-${ribbonTone} no-print`}>{RIBBON_TEXT[ribbonTone]}</span>
+        )}
+        {(PRINT_COPY_LABELS[printCopies] || [null]).map((label, i) => (
+          <div className="print-copy" key={i}>
+            <div className="invoice-doc invoice-full invoice-page-fill" style={{ width: standalone ? "210mm" : "100%", maxWidth: "210mm" }}>
+              <FullInvoice invoice={invoice} copyLabel={label || "ORIGINAL FOR RECIPIENT"} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <InvoiceComments
+        loadComments={() => api.getInvoiceComments(invoiceId)}
+        postComment={(message) => api.createInvoiceComment(invoiceId, message)}
+        viewerType="business"
+      />
+
+      {canEdit && <EditHistory invoiceId={invoiceId} />}
+
+      {showSendModal && (
+        <SendDocumentModal
+          title={`Email Invoice ${invoice.invoice_number}`}
+          defaultTo={invoice.customer?.email}
+          defaultSubject={sendDefaults.subject}
+          defaultBody={sendDefaults.body}
+          onSend={async ({ to, subject, message }) => {
+            await api.sendInvoiceEmail(invoiceId, { to, subject, message });
+            await refresh();
+          }}
+          onClose={() => setShowSendModal(false)}
+        />
+      )}
+
+      {showReceiptModal && (
+        <SendDocumentModal
+          title={`Send Payment Receipt for Invoice ${invoice.invoice_number}`}
+          defaultTo={invoice.customer?.email}
+          defaultSubject={receiptDefaults.subject}
+          defaultBody={receiptDefaults.body}
+          onSend={async ({ to, subject, message }) => {
+            await api.sendInvoiceEmail(invoiceId, { to, subject, message, receipt: true });
+          }}
+          onClose={() => setShowReceiptModal(false)}
+        />
+      )}
+
+      {confirmingMarkSent && (
+        <ConfirmDialog
+          title="Mark this invoice as Sent?"
+          message="Use this if you already handed the invoice to the customer some other way — in person, WhatsApp, printed and posted — instead of emailing it from here. This doesn't send anything itself, it just takes the invoice out of Draft."
+          confirmLabel="Mark as Sent"
+          busy={statusBusy}
+          onConfirm={markAsSent}
+          onCancel={() => setConfirmingMarkSent(false)}
+        />
+      )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title={`Delete invoice ${invoice.invoice_number}?`}
+          message="This cannot be undone. Any payments recorded against it are removed too, and it will no longer count toward your reports or totals. If you just want to void a real invoice, Cancel above keeps the record instead."
+          confirmLabel="Delete permanently"
+          danger
+          busy={deleteBusy}
+          onConfirm={deleteInvoice}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
+    </div>
+  );
+}

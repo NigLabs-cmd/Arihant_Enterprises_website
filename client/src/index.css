@@ -1,0 +1,1588 @@
+:root {
+  --ink: #1c1f26;
+  --muted: #6b7280;
+  --border: #e2e5ea;
+  --accent: #1a7f5a;
+  --accent-ink: #ffffff;
+  --accent-amber: #d97a1f;
+  --bg: #f7f8fa;
+  color-scheme: light;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); }
+
+/* ---- App shell: side navigation ---- */
+:root {
+  --sidebar-width: 236px;
+  --sidebar-width-collapsed: 72px;
+  --sidebar-bg: #0a2c50;
+  --sidebar-bg-raised: #0f3a68;
+  --sidebar-ink: #a7c0da;
+  --sidebar-ink-hover: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+}
+
+.app-shell { min-height: 100vh; display: flex; align-items: stretch; }
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-ink);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.15s ease, flex-basis 0.15s ease;
+}
+.sidebar-collapsed .sidebar { width: var(--sidebar-width-collapsed); flex-basis: var(--sidebar-width-collapsed); }
+
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 16px; text-decoration: none;
+  border-bottom: 1px solid var(--sidebar-border);
+  white-space: nowrap; overflow: hidden;
+}
+.sidebar-brand-mark {
+  flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px;
+  background: white; display: flex; align-items: center; justify-content: center;
+  padding: 4px; box-sizing: border-box;
+}
+.sidebar-brand-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.sidebar-brand-word { color: white; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.sidebar-brand-word em { color: #4ade80; font-style: normal; }
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 2px; padding: 12px; flex: 1; }
+.sidebar-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 8px;
+  color: var(--sidebar-ink); text-decoration: none; font-size: 14px;
+  white-space: nowrap; overflow: hidden;
+}
+.sidebar-link svg { flex: 0 0 auto; }
+.sidebar-link:hover { background: var(--sidebar-bg-raised); color: var(--sidebar-ink-hover); }
+.sidebar-link.active { background: var(--accent); color: white; font-weight: 600; }
+
+.sidebar-toggle {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 16px; margin: 0; border: none; border-top: 1px solid var(--sidebar-border);
+  border-radius: 0; background: transparent; color: var(--sidebar-ink);
+  font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden;
+}
+.sidebar-toggle:hover { color: var(--sidebar-ink-hover); }
+
+.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 18px 0; }
+.sidebar-collapsed .sidebar-link { justify-content: center; }
+.sidebar-collapsed .sidebar-toggle { justify-content: center; }
+.sidebar-collapsed .sidebar-link-label,
+.sidebar-collapsed .sidebar-brand-word { display: none; }
+
+.app-main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 10px 24px; background: white; border-bottom: 1px solid var(--border);
+  min-height: 56px; box-sizing: border-box;
+}
+.topbar-spacer { flex: 1; display: flex; align-items: center; }
+.firm-switcher {
+  width: auto; margin-top: 0; max-width: 240px; font-size: 13px; padding: 6px 10px;
+  border-color: var(--border); background: var(--bg, #f6f7f9); cursor: pointer;
+}
+.topbar-user { display: flex; align-items: center; gap: 10px; }
+.topbar-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  flex: 0 0 32px;
+}
+.topbar-user-text { display: flex; flex-direction: column; font-size: 13px; line-height: 1.3; }
+.topbar-user-text .muted { font-size: 12px; text-transform: capitalize; }
+.topbar-logout { display: flex; padding: 6px; color: var(--muted); background: transparent; }
+.topbar-logout:hover { color: var(--accent); }
+
+/* Widened from 1120px (2026-09-21): Naveen flagged the empty gutters this
+   left on either side of the actual page content, sidebar, then a wide gap,
+   then the page, then another gap out to the topbar's own full-width edge.
+   1440px keeps a sensible reading width on the narrower pages (forms,
+   settings) while giving wide ones (the line item table especially) real
+   room before they need their own horizontal scroll. */
+main { max-width: 1440px; margin: 0 auto; padding: 28px 24px 60px; width: 100%; box-sizing: border-box; }
+
+@media (max-width: 720px) {
+  :root { --sidebar-width: 72px; }
+  .sidebar-link-label, .sidebar-brand-word, .sidebar-toggle .sidebar-link-label { display: none; }
+  .sidebar-link, .sidebar-brand, .sidebar-toggle { justify-content: center; }
+}
+
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+h1 { font-size: 22px; }
+.muted { color: var(--muted); }
+.error { color: #b3261e; }
+
+.btn, button, .link-btn {
+  font: inherit;
+}
+button, .btn {
+  background: var(--accent); color: var(--accent-ink); border: none;
+  padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block;
+}
+button:disabled { opacity: 0.6; cursor: default; }
+.link-btn { background: none; color: var(--accent); border: none; padding: 0; cursor: pointer; }
+.btn-danger { background: #b3261e; color: white; }
+.btn-secondary { background: white; color: var(--ink); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* A compact icon-only row action (Edit/Delete on a list row), reusable
+   anywhere a text link would take up more room than it needs to — the
+   Items page's Edit/Delete pair is the first user (2026-09-17). */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; background: none; border: none; border-radius: 6px;
+  color: var(--muted); cursor: pointer; padding: 0;
+}
+.icon-btn:hover { background: var(--bg); color: var(--ink); }
+.item-row-actions { display: flex; gap: 4px; align-items: center; }
+
+/* Invoice# preview on New Invoice, plus the gear icon that opens Invoice
+   Number Preferences (2026-09-20). The input and the gear sit on one row,
+   the input taking whatever room is left. */
+.invoice-number-field { display: flex; align-items: center; gap: 6px; }
+.invoice-number-field input { flex: 1; min-width: 0; }
+
+.form-submit-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.form-submit-row .muted { font-size: 12px; width: 100%; margin-top: -2px; }
+
+label { display: block; margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+label.block { max-width: 320px; }
+.form-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.form-row label.block { flex: 1; min-width: 200px; }
+input, select, textarea { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+textarea { resize: vertical; }
+
+.auth-page { display: flex; justify-content: center; padding-top: 60px; }
+.auth-card { background: white; padding: 32px; border-radius: 10px; width: 360px; border: 1px solid var(--border); }
+.auth-card h1 { margin-top: 0; }
+.auth-logo { display: block; height: 40px; margin: 0 auto 20px; }
+/* Answers "how do I know what to log in with" on the portal set-password
+   page — a client kept reporting they had no idea, since neither the old
+   invite email nor this page ever said (2026-09-15). */
+.portal-login-email-note {
+  background: #eef6f2; border: 1px solid #cfe6da; border-radius: 6px;
+  padding: 10px 12px; font-size: 13px; color: var(--ink); margin: -4px 0 16px;
+}
+.portal-login-email-note strong { color: var(--accent); }
+.wizard-card { width: 400px; }
+.step-indicator { margin-top: -8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.wizard-nav { display: flex; justify-content: space-between; align-items: center; }
+
+.inline-form { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+.inline-form input { width: auto; margin-top: 0; }
+.inline-form textarea { width: 220px; margin-top: 0; resize: vertical; }
+.inline-form .pincode-input, .inline-form .country-input { width: 110px; }
+
+.list-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.list-toolbar input[type="search"] { width: 260px; max-width: 100%; margin-top: 0; }
+.list-toolbar select { width: auto; margin-top: 0; }
+.list-empty-filtered { color: var(--muted); padding: 16px 0; }
+
+.table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.table th, .table td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.table th { color: var(--muted); font-weight: 600; }
+.table .num { text-align: right; }
+.line-item-table input, .line-item-table select, .line-item-table textarea { margin-top: 0; }
+.line-item-table td { padding: 4px; vertical-align: top; }
+.line-item-table textarea { resize: vertical; min-height: 38px; font-size: 14px; }
+/* Grows to fit its own text (see ItemPicker.jsx), so no scrollbar or manual dragging is needed. */
+.line-item-table .item-picker-description { overflow-y: hidden; resize: none; }
+/* The item picker is the WHOLE "Item & Description" cell — one combined
+   widget (search box, or the confirmed name + its description), matching how
+   Zoho's item table has one combined column instead of two cramped
+   side-by-side fields. */
+/* Bumped from 220px (2026-09-17): with HSN/SAC and Unit added as two more
+   columns, a table in auto layout mode will happily shrink every column,
+   including this one, right down to its floor rather than ever triggering
+   the wrap's horizontal scroll — a 220px floor left almost no real room for
+   the item search box itself once the other columns claimed their share of
+   the row. 300px is enough to type and read a real item name comfortably,
+   and forces the row to scroll sideways on a narrow screen instead. */
+.line-item-details { min-width: 300px; }
+
+/* Item picker — a type-to-search combobox standing in for the old plain
+   <select>, matching Zoho's "type or click to select an item" field. Before
+   anything is picked it's just the search input; once a name is confirmed
+   (picked from the catalog, or free-typed and committed) that becomes a
+   fixed label and a description box appears underneath it. */
+.item-picker { position: relative; }
+.item-picker input { font-size: 13px; padding: 6px 8px; }
+/* Once an item is picked, its name reads as plain text, not its own boxed
+   field: only the description below is meant to look boxed, matching
+   Naveen's Zoho reference (2026-09-21): "once we select from dropdown, the
+   heading will not be shown in box, only below description will be as box". */
+.item-picker-locked {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 4px 0;
+}
+.item-picker-locked-name {
+  background: none; border: none; padding: 0; margin: 0; text-align: left; flex: 1;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+}
+.item-picker-locked-name:hover { text-decoration: underline; }
+/* Groups the new "Edit item" icon (Owner/Admin only, real catalog picks
+   only) with the existing clear "x", so they sit together at the row's end
+   instead of the clear button alone (2026-09-21). */
+.item-picker-locked-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.item-picker-locked-clear {
+  background: none; border: none; padding: 0 2px; margin: 0; color: var(--muted);
+  font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0;
+}
+.item-picker-locked-clear:hover { color: #b3261e; }
+.item-picker-description { margin-top: 6px; font-size: 13px; }
+/* Rendered through a portal straight onto <body> (2026-09-17), positioned by
+   JS with a fixed top/left/width taken from the search box's own position —
+   NOT a plain absolutely-positioned child of .item-picker any more. That
+   matters once the line item table sits inside a horizontally-scrolling box
+   (see .line-item-table-wrap): setting overflow-x on a container makes the
+   browser also start clipping it vertically (a well-known CSS quirk — an
+   overflow-y of "visible" only stays visible when overflow-x is "visible"
+   too), which was cutting this dropdown off and forcing a scrollbar just to
+   see "+ Add New Item". Escaping to the body sidesteps that entirely. */
+.item-picker-dropdown {
+  position: fixed; z-index: 1000;
+  background: white; border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18); max-height: 300px; overflow-y: auto;
+}
+/* Matches Zoho's own item picker shape (per Naveen's reference screenshot,
+   2026-09-17): a plain full-width list, each row separated by a thin line,
+   not individually boxed with its own border/margin/radius — that boxed-card
+   look (tried briefly, same day) was a step in the wrong direction. Rows run
+   edge-to-edge inside the dropdown's own rounded, shadowed panel, and the
+   panel floats on top of the page (able to cover "+ Add line" or anything
+   else beneath it), same as before. */
+.item-picker-option {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  width: 100%; text-align: left; padding: 10px 14px; border: none;
+  border-bottom: 1px solid var(--border); background: white;
+  cursor: pointer; font-size: 13px; font: inherit; color: var(--ink);
+}
+.item-picker-option:hover { background: var(--bg); }
+.item-picker-name { font-weight: 500; }
+.item-picker-rate { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.item-picker-empty { padding: 10px 14px; font-size: 12px; color: var(--muted); }
+.item-picker-add {
+  display: block; width: 100%; text-align: left; padding: 10px 14px; border: none;
+  border-top: 1px solid var(--border); background: none; color: var(--accent);
+  cursor: pointer; font-size: 13px; font-weight: 600; font: inherit;
+}
+.item-picker-add:hover { background: var(--bg); }
+
+/* Small inline modal, used by the item picker's "+ Add New Item" popup. */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100; background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-panel {
+  background: white; border-radius: 10px; width: 420px; max-width: 100%;
+  max-height: 90vh; overflow-y: auto; padding: 20px 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+.modal-panel.wide { width: 560px; }
+.modal-panel.wide textarea { font-size: 13px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.modal-header h3 { margin: 0; }
+.modal-close {
+  background: none; border: none; font-size: 22px; line-height: 1; color: var(--muted);
+  cursor: pointer; padding: 0 4px;
+}
+.modal-close:hover { color: var(--ink); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+/* Billing/Shipping address block in the Add/Edit Customer modals
+   (Customers.jsx's AddressFields, 2026-09-22): its own bordered group,
+   same pattern as .eway-fieldset, with the legend stretched to also hold
+   the "Copy billing address" link on the Shipping instance. */
+.address-fields { border: 1px solid var(--border); border-radius: 8px; padding: 4px 16px 12px; margin: 0 0 16px; }
+.address-fields legend {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; padding: 0 6px; font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.address-fields label.block { max-width: none; }
+
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+.badge-draft { background: #eee; color: #555; }
+.badge-sent { background: #dbeafe; color: #1e40af; }
+.badge-paid { background: #dcfce7; color: #166534; }
+.badge-partially_paid { background: #fef9c3; color: #854d0e; }
+.badge-overdue { background: #fee2e2; color: #991b1b; }
+
+.totals-box { max-width: 320px; margin-left: auto; margin-top: 16px; }
+.totals-box div { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+.totals-box .grand-total { font-weight: 700; font-size: 16px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+
+.toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.inline-confirm { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+
+/* Invoice detail toolbar — one consistent family of compact outline chips
+   instead of a mix of plain text links, solid green buttons, and outlined
+   buttons all next to each other, which read as cluttered and inconsistent
+   and took up far more room than the row of actions needed (2026-09-16). */
+.invoice-toolbar { gap: 8px; margin-bottom: 16px; }
+.invoice-toolbar .toolbar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: white; color: var(--ink); border: 1px solid var(--border);
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: none; line-height: 1.4; white-space: nowrap;
+}
+.invoice-toolbar .toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* At most one button is ever "primary" at a time — whichever one matches
+   the What's Next banner above — so there's a single obvious next action
+   instead of six equally loud green buttons. */
+.invoice-toolbar .toolbar-btn-primary {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+}
+.invoice-toolbar .toolbar-btn-primary:hover { background: #156548; color: var(--accent-ink); }
+.invoice-toolbar .toolbar-btn-danger { color: #b3261e; }
+.invoice-toolbar .toolbar-btn-danger:hover { border-color: #b3261e; color: #b3261e; }
+/* The confirm-cancel button reuses the site-wide solid .btn-danger look —
+   needs to win over .toolbar-btn's own background/color at equal
+   specificity, so it's spelled out again here rather than relying on
+   source order (2026-09-16). */
+.invoice-toolbar .toolbar-btn.btn-danger { background: #b3261e; color: white; border-color: #b3261e; }
+.invoice-toolbar .toolbar-btn.btn-danger:hover { background: #96201a; color: white; }
+
+.settings-form { max-width: 560px; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; }
+.checkbox-label input { width: auto; margin-top: 0; }
+.logo-preview-row { display: flex; align-items: center; gap: 12px; margin: -4px 0 16px; }
+.logo-preview { max-height: 60px; max-width: 200px; border: 1px solid var(--border); border-radius: 6px; padding: 4px; background: white; }
+
+/* ---- Settings page ---- */
+.settings-page { max-width: 1040px; display: flex; flex-direction: column; gap: 20px; }
+.settings-page > p.muted:first-child { margin-top: -8px; }
+
+.settings-card {
+  background: white; border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; box-shadow: 0 1px 2px rgba(28, 31, 38, 0.04);
+}
+.settings-card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+.settings-card-icon {
+  flex: none; width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: #eaf5ef; color: var(--accent);
+}
+.settings-card-header h2 { margin: 0 0 2px; font-size: 16px; }
+.settings-card-header p { margin: 0; }
+.settings-card .settings-form,
+.settings-card .inline-form { max-width: none; }
+.settings-card > *:last-child { margin-bottom: 0; }
+
+.cloud-backup-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.cloud-backup-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;
+}
+.cloud-backup-row strong { font-size: 14px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.field-row > label { min-width: 0; }
+@media (max-width: 640px) {
+  .field-row { grid-template-columns: 1fr; }
+}
+
+.danger-card { border-color: #f0c9c5; background: #fdf7f6; }
+.danger-card .settings-card-icon { background: #fbe4e1; color: #b3261e; }
+.danger-card p.muted { color: #8a5b56; }
+
+/* Email settings — provider presets, so most people never have to know what
+   an SMTP host or port even is (2026-09-15). */
+.smtp-provider-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.smtp-provider-btn {
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+  background: white; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.smtp-provider-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+.smtp-guide {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--ink);
+}
+.smtp-guide p { margin: 0 0 6px; font-weight: 600; }
+.smtp-guide ol { margin: 0; padding-left: 18px; }
+.smtp-guide li { margin-bottom: 4px; }
+.smtp-guide a { color: var(--accent); font-weight: 600; }
+
+/* ---- Reports ---- */
+.stat-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.stat-tile {
+  background: white; border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; display: flex; flex-direction: column; gap: 6px;
+}
+.stat-label { font-size: 13px; color: var(--muted); }
+.stat-value { font-size: 22px; font-weight: 700; }
+/* align-items: start stops the shorter Total Receivables card from being
+   stretched to match the taller Cash Flow card's height, which used to
+   leave a large empty gap under its "View full reports" link (2026-09-16). */
+.report-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; align-items: start; }
+.panel-header-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.panel-header-row h2 { margin-bottom: 0; }
+.dashboard-invoices .table { margin-top: 8px; }
+.low-stock-alert { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 16px; margin-bottom: 32px; }
+.low-stock-alert h2 { margin-top: 0; }
+.panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.panel h2 { margin-top: 0; }
+@media (max-width: 720px) {
+  .stat-tiles { grid-template-columns: repeat(2, 1fr); }
+  .report-columns { grid-template-columns: 1fr; }
+}
+
+/* ---- Receivables split ---- */
+.receivables-split { display: flex; gap: 32px; margin-bottom: 12px; }
+.receivables-split > div { display: flex; flex-direction: column; gap: 2px; }
+.receivables-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--border); }
+.receivables-bar-current { background: var(--accent); }
+.receivables-bar-overdue { background: #b3261e; }
+
+/* ---- Cash flow chart ---- */
+.cash-flow-chart { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding-top: 8px; }
+.cash-flow-bar { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; height: 100%; }
+.cash-flow-bar-track { flex: 1; width: 100%; max-width: 36px; display: flex; align-items: flex-end; }
+.cash-flow-bar-fill { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+.cash-flow-value { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cash-flow-label { font-size: 12px; color: var(--muted); }
+
+/* Payment Summary bar above the Invoices list, matching the strip Zoho shows
+   above its own "All Invoices" table (2026-09-16). Total Outstanding/Due
+   Today/Due Within 30 Days/Overdue are computed client-side from whatever
+   invoices are already loaded, so every role sees them; Average Days to Get
+   Paid needs payment history from the reports summary, so it only appears
+   for Owner/Admin, same access level as the rest of that summary. */
+.payment-summary-bar {
+  display: flex; flex-wrap: wrap; background: linear-gradient(135deg, #fbeee0 0%, #eaf3fb 100%);
+  border: 1px solid var(--border); border-radius: 12px; padding: 18px 24px; margin: 20px 0 4px;
+}
+.payment-summary-item {
+  flex: 1; min-width: 170px; padding: 0 22px; border-left: 1px solid rgba(28, 31, 38, 0.08);
+}
+.payment-summary-item:first-child { border-left: none; padding-left: 0; }
+.payment-summary-label {
+  display: block; font-size: 11px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.03em; margin-bottom: 6px;
+}
+.payment-summary-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.payment-summary-value.payment-summary-overdue { color: #b3261e; }
+@media (max-width: 900px) {
+  .payment-summary-bar { gap: 16px 0; }
+  .payment-summary-item { flex: 1 1 45%; border-left: none; padding-left: 0; }
+}
+
+/* ---- Master-detail Invoices list ---- */
+.invoices-split { display: grid; grid-template-columns: 340px 1fr; gap: 20px; height: 680px; margin-top: 12px; }
+.invoice-list-wrap { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.invoice-list-wrap .list-toolbar { flex-shrink: 0; }
+.invoice-list {
+  background: white; border: 1px solid var(--border); border-radius: 10px;
+  overflow-y: auto; flex: 1; min-height: 0;
+}
+.invoice-list-item {
+  display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: 100%;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.invoice-list-item:hover { background: var(--bg); }
+.invoice-list-item.active { background: #eaf5ef; border-left: 3px solid var(--accent); padding-left: 11px; }
+.invoice-list-item-checkbox { flex-shrink: 0; margin: 0; width: auto; }
+.invoice-list-item-body { all: unset; display: block; box-sizing: border-box; width: 100%; min-width: 0; cursor: pointer; }
+.invoice-list-item-top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.invoice-list-item-bottom { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.bulk-action-toolbar { padding: 8px 2px; font-size: 13px; }
+.bulk-action-toolbar span { font-weight: 600; margin-right: 4px; }
+/* Colored status pills, matching Zoho's own DUE IN X DAYS / OVERDUE BY X DAYS
+   look — a filled rounded badge instead of plain colored text, so the state
+   of an invoice/quote reads at a glance in a scanned list (2026-09-16). Also
+   used directly (as .status-pill) by the Quotes list for the same reason. */
+.due-label, .status-pill {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
+}
+.due-label-overdue, .status-pill-overdue { background: #fee2e2; color: #991b1b; }
+.due-label-due, .due-label-sent, .status-pill-due { background: #dbeafe; color: #1e40af; }
+.due-label-due-soon, .status-pill-due-soon { background: #fef9c3; color: #854d0e; }
+.due-label-paid, .status-pill-paid { background: #dcfce7; color: #166534; }
+.due-label-draft, .status-pill-draft { background: #eee; color: #555; }
+.due-label-cancelled, .status-pill-cancelled { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+
+.invoice-detail-pane {
+  background: white; border: 1px solid var(--border); border-radius: 10px;
+  overflow-y: auto; height: 100%; padding: 20px; box-sizing: border-box;
+}
+
+.payment-form { flex-basis: 100%; max-width: 640px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 4px; }
+.payment-form .form-row { margin-bottom: 4px; }
+.payment-form-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+
+@media (max-width: 900px) {
+  .invoices-split { grid-template-columns: 1fr; height: auto; }
+  .invoice-list-wrap { height: 380px; }
+  .invoice-detail-pane { height: 600px; }
+}
+
+/* "What's next" banner on the invoice detail pane — a contextual nudge
+   toward the next thing to do with this invoice (send it, record a
+   payment), matching the banner Zoho shows above its own invoice preview
+   (2026-09-16). */
+.banner-next-step {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  background: #eef4ff; border: 1px solid #d3e0fb; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;
+}
+.banner-next-step-text { font-size: 13px; }
+.banner-next-step-eyebrow {
+  display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: #1e40af; margin-bottom: 2px;
+}
+.banner-next-step button { flex-shrink: 0; }
+
+/* ---- Invoice / Quote / Credit Note document ---- */
+.invoice-doc-wrap { position: relative; overflow: hidden; }
+/* A diagonal corner ribbon on the on-screen invoice preview showing its
+   status at a glance (Draft/Sent/Overdue/Partially Paid/Paid), same idea as
+   Zoho's own "Sent" ribbon. Screen-only (no-print) — a customer looking at
+   the emailed/downloaded PDF shouldn't see an internal status stamp, and a
+   cancelled invoice already gets its own big CANCELLED stamp on the
+   document itself (2026-09-16). */
+.status-ribbon {
+  position: absolute; top: 22px; left: -46px; width: 180px; padding: 5px 0; text-align: center;
+  transform: rotate(-45deg); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: white; box-shadow: 0 2px 4px rgba(28, 31, 38, 0.18); z-index: 3; pointer-events: none;
+}
+.status-ribbon-draft { background: #6b7280; }
+.status-ribbon-sent { background: #1d6fd8; }
+.status-ribbon-partially_paid { background: #b26a00; }
+.status-ribbon-paid { background: #1a7f5a; }
+.status-ribbon-overdue { background: #b3261e; }
+
+.invoice-doc {
+  background: white; margin: 0 auto; border: 1px solid var(--border); position: relative;
+}
+.invoice-doc.invoice-full { padding: 16mm 14mm; }
+.invoice-doc.invoice-page-fill {
+  display: flex; flex-direction: column; min-height: 297mm; box-sizing: border-box; padding: 5mm;
+}
+.invoice-template {
+  position: relative; display: flex; flex: 1 0 100%; flex-direction: column;
+  min-height: 287mm; box-sizing: border-box;
+  border: 1px solid #26364a; color: #17212f; font-size: 10px;
+}
+.invoice-template-header { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #26364a; break-inside: avoid; page-break-inside: avoid; }
+.invoice-template-business { min-width: 0; }
+.invoice-template-business img { display: block; max-width: 150px; max-height: 48px; object-fit: contain; margin-bottom: 5px; }
+.invoice-template-business > strong { display: block; font-size: 18px; letter-spacing: 0.04em; }
+.invoice-template-business p { margin: 2px 0; line-height: 1.3; }
+.invoice-template-title { text-align: right; }
+.invoice-template-title h1 { margin: 0 0 3px; font-size: 16px; letter-spacing: 0.08em; }
+.invoice-template-title > strong { display: inline-block; margin-bottom: 6px; color: #44566c; font-size: 8px; letter-spacing: 0.05em; }
+.invoice-template-title p { margin: 2px 0; }
+.invoice-template-parties { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 9px; border: 1px solid #8a96a5; break-inside: avoid; page-break-inside: avoid; }
+.invoice-template-parties > div { min-width: 0; padding: 7px; }
+.invoice-template-parties > div + div { border-left: 1px solid #8a96a5; }
+.invoice-template-parties > div > strong { display: block; margin-bottom: 4px; color: #26364a; font-size: 9px; letter-spacing: 0.04em; }
+.invoice-template-parties span, .invoice-template-parties b { display: block; line-height: 1.35; overflow-wrap: anywhere; }
+.invoice-template-parties b { margin-bottom: 2px; }
+.invoice-template-subject { margin: 7px 0 0; }
+.invoice-template-items { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 9px; font-size: 7px; }
+.invoice-template-items th, .invoice-template-items td { border: 1px solid #8a96a5; padding: 4px 3px; vertical-align: top; overflow-wrap: anywhere; }
+.invoice-template-items th { background: #26364a; color: #fff; font-weight: 700; text-align: center; }
+.invoice-template-items tbody tr:nth-child(even) { background: #f3f6f9; }
+.invoice-template-items td:first-child, .invoice-template-items td:nth-child(3),
+.invoice-template-items td:nth-child(n+4) { text-align: center; }
+.invoice-template-items td:nth-child(2) { text-align: left; }
+.invoice-template-items td:nth-child(2) strong, .invoice-template-description-detail { display: block; }
+.invoice-template-description-detail { margin-top: 2px; color: #4b5563; }
+.invoice-template-section td { background: #e7edf3 !important; text-align: left !important; font-weight: 700; }
+.invoice-template-items.invoice-tax-local th:nth-child(1) { width: 4%; }
+.invoice-template-items.invoice-tax-local th:nth-child(2) { width: 27%; }
+.invoice-template-items.invoice-tax-local th:nth-child(3) { width: 7%; }
+.invoice-template-items.invoice-tax-local th:nth-child(4) { width: 6%; }
+.invoice-template-items.invoice-tax-local th:nth-child(5) { width: 5%; }
+.invoice-template-items.invoice-tax-local th:nth-child(6) { width: 8%; }
+.invoice-template-items.invoice-tax-local th:nth-child(7) { width: 11%; }
+.invoice-template-items.invoice-tax-local th:nth-child(8),
+.invoice-template-items.invoice-tax-local th:nth-child(10) { width: 5%; }
+.invoice-template-items.invoice-tax-local th:nth-child(9),
+.invoice-template-items.invoice-tax-local th:nth-child(11) { width: 11%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(1),
+.invoice-template-items.invoice-tax-none th:nth-child(1) { width: 5%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(2),
+.invoice-template-items.invoice-tax-none th:nth-child(2) { width: 32%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(3),
+.invoice-template-items.invoice-tax-none th:nth-child(3) { width: 8%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(4),
+.invoice-template-items.invoice-tax-none th:nth-child(4) { width: 7%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(5),
+.invoice-template-items.invoice-tax-none th:nth-child(5) { width: 5%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(6),
+.invoice-template-items.invoice-tax-none th:nth-child(6) { width: 10%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(7),
+.invoice-template-items.invoice-tax-none th:nth-child(7) { width: 14%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(8),
+.invoice-template-items.invoice-tax-none th:nth-child(8) { width: 8%; }
+.invoice-template-items.invoice-tax-interstate th:nth-child(9),
+.invoice-template-items.invoice-tax-none th:nth-child(9) { width: 11%; }
+.invoice-template-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 9px; align-items: start; }
+.invoice-template-words { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid #c4ccd5; min-height: 54px; }
+.invoice-template-words strong, .invoice-template-bank > div > strong,
+.invoice-template-declaration > strong { color: #26364a; font-size: 8px; letter-spacing: 0.04em; }
+.invoice-template-note { color: #5b6572; font-size: 8px; }
+.invoice-template-totals { border: 1px solid #8a96a5; }
+.invoice-template-totals > div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; border-bottom: 1px solid #d6dbe1; }
+.invoice-template-totals > div:last-child { border-bottom: 0; }
+.invoice-template-grand-total { background: #e8edf2; font-size: 10px; }
+.invoice-template-notes { margin-top: 6px; }
+.invoice-template-bank { margin-top: 8px; padding: 6px; border: 1px solid #c4ccd5; min-height: 38px; }
+.invoice-template-bank p { margin: 2px 0; }
+.invoice-template-declaration { margin-top: 7px; padding: 6px; border-top: 1px solid #8a96a5; border-bottom: 1px solid #8a96a5; }
+.invoice-template-declaration p { margin: 3px 0 0; }
+.invoice-template-signatures { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-top: auto; padding-top: 18px; min-height: 72px; }
+.invoice-template-signatures { break-inside: avoid; page-break-inside: avoid; }
+.invoice-template-receiver, .invoice-template-authorized { display: flex; flex-direction: column; width: 42%; gap: 4px; }
+.invoice-template-authorized { align-items: flex-end; text-align: right; }
+.invoice-template-authorized img { max-width: 150px; max-height: 38px; object-fit: contain; }
+.invoice-template-signature-line { width: 175px; max-width: 100%; height: 24px; border-bottom: 1px solid #26364a; }
+.invoice-template-authorized .invoice-template-signature-line { align-self: flex-end; }
+.invoice-template-authorized > strong, .invoice-template-signatures span { font-size: 9px; }
+
+/* One .print-copy wraps each printed copy (Original/Duplicate/Triplicate,
+   2026-09-22, InvoiceDetail.jsx's copies selector). On screen only the
+   first is shown as a preview; the rest exist purely for actual printing,
+   see the @media print rules below.
+   Bug fixed 2026-09-22, found from Naveen's screenshot showing the whole
+   invoice document had gone missing: :not(:first-child) counts every
+   sibling in .invoice-doc-wrap, not just other .print-copy elements, and
+   the status ribbon's own <span> (whenever an invoice actually has a
+   status ribbon, i.e. almost always) sits before .print-copy as its first
+   child, which made even the one and only .print-copy never actually be
+   the first child, hiding it always. :first-of-type only counts siblings
+   of the same tag (div), so it correctly ignores the ribbon's <span>. */
+.print-copy:not(:first-of-type) { display: none; }
+.print-copy-label {
+  text-align: center; font-weight: 700; font-size: 12px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted); padding: 4px 0 8px;
+}
+
+.doc-cancelled-stamp {
+  position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 64px; font-weight: 800; letter-spacing: 0.1em; color: #d33; opacity: 0.28;
+  border: 6px solid #d33; border-radius: 12px; padding: 6px 28px; pointer-events: none; z-index: 5;
+}
+
+.doc-brand-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
+.doc-brand-left h2 { margin: 8px 0 6px; font-size: 20px; }
+.doc-brand-left p { margin: 0 0 2px; font-size: 13px; color: var(--muted); }
+.doc-logo { max-height: 56px; max-width: 220px; display: block; object-fit: contain; }
+.doc-brand-right { text-align: right; flex-shrink: 0; }
+.doc-brand-right h3 { margin: 0 0 10px; font-size: 15px; color: var(--muted); font-weight: 600; }
+.doc-headline-label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.doc-headline-value { display: block; font-size: 22px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+.doc-brand-right p { margin: 4px 0 0; font-size: 12px; }
+
+.invoice-parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 24px; font-size: 14px; }
+/* Bill To plus an optional Ship To (2026-09-22), grouped so the pair stays
+   one flex child of .invoice-parties and the Invoice Date/Terms/Due Date
+   column on the right keeps its own place regardless of whether Ship To
+   is present. */
+.invoice-bill-ship { display: flex; gap: 24px; flex-wrap: wrap; }
+.invoice-bill-ship p { margin: 2px 0; }
+.invoice-dates { min-width: 220px; }
+.invoice-dates div { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; font-size: 13px; }
+.invoice-dates span:first-child { color: var(--muted); }
+.invoice-notes { margin-top: 24px; font-size: 13px; color: var(--muted); }
+.invoice-subject { margin: -8px 0 20px; font-size: 13px; }
+.invoice-eway { margin-top: 16px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: var(--bg, #f6f7f9); }
+.invoice-eway strong { display: block; margin-bottom: 4px; }
+.invoice-eway p { margin: 0; color: var(--ink); }
+
+.eway-fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 4px 16px 8px; margin: 0 0 16px; }
+.eway-fieldset legend { padding: 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+
+/* ---- New Invoice / Edit Invoice: single column layout (2026-09-16) ----
+   Was a two column grid (main + a fixed 320px sidebar); Naveen found that
+   split awkward, so every section — Invoice Details, Line Items, Terms,
+   Invoice Settings, and the rest — now just flows top to bottom in one
+   full-width column instead. */
+.invoice-form-grid {
+  display: flex; flex-direction: column; gap: 20px;
+}
+.invoice-form-main, .invoice-form-sidebar { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+.form-card {
+  background: white; border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; box-shadow: 0 1px 2px rgba(28, 31, 38, 0.04);
+}
+.form-card h2 { margin: 0 0 16px; font-size: 16px; }
+.form-card > *:last-child { margin-bottom: 0; }
+
+/* Optional field groups start collapsed behind a "+ Add X" link and
+   expand in place, so the sidebar shows only what a given invoice
+   actually needs instead of several always open boxes. */
+.collapsible-section-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 14px; border: 1px dashed var(--border); border-radius: 12px;
+  background: white; color: var(--accent); font-weight: 600; font-size: 14px; cursor: pointer;
+}
+.collapsible-section-toggle:hover { border-color: var(--accent); background: var(--bg); }
+.collapsible-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.collapsible-section-header h2 { margin: 0; }
+
+/* Lets someone insert a dynamic field like the invoice number or amount
+   without needing to know the {{...}} syntax exists (2026-09-16). */
+.insert-field-select {
+  width: auto; margin-top: 6px; margin-bottom: 14px; padding: 5px 10px;
+  font-size: 12px; color: var(--muted); border-radius: 999px; display: inline-block;
+}
+
+.doc-line-items thead tr { background: #2b2f38; }
+.doc-line-items thead th { color: white; font-weight: 600; padding: 10px 8px; border-bottom: none; }
+/* Qty/Rate/Discount/Amount stay top aligned even when a line's description
+   runs to several lines, matching Zoho's own printed layout rather than the
+   browser's default middle alignment (2026-09-21). */
+.doc-line-items td { vertical-align: top; }
+/* Item & Description column: a multi-line description (an item's own name
+   on top, further detail below, the same shape Zoho prints) is rendered as
+   real stacked block elements by FullInvoice.jsx/QuoteView.jsx/
+   CreditNoteView.jsx, not a literal "\n" in one text node, so the name
+   reads as its own bold line and the detail underneath as smaller, muted
+   text, instead of the flat single run of text this used to print as
+   (2026-09-21). */
+.doc-line-desc-title { font-weight: 600; }
+.doc-line-desc-detail { color: var(--muted); font-size: 0.93em; margin-top: 1px; }
+/* A section header row on the printed/emailed document (see db.js's
+   line_type comment): a plain shaded divider carrying only its own label,
+   matching how mailer.js's PDF renders the same row (2026-09-21). */
+.doc-line-header-row td { background: #f3f4f6; font-weight: 600; }
+.totals-box .doc-balance-due-row { background: #f3f4f6; font-weight: 700; margin: 4px -8px 0; padding: 8px; }
+
+.doc-amount-words { font-size: 13px; margin: 20px 0 0; }
+.doc-footer { margin-top: 28px; font-size: 13px; }
+.doc-footer-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.doc-footer-section p { margin: 2px 0; }
+.doc-footer-section h4 { margin: 0 0 8px; font-size: 14px; }
+
+/* Direct UPI payment on the invoice (2026-09-15) — the QR sits beside the
+   bank details rather than below them, so a client scanning to pay sees
+   both the account info and the scan option in one glance. */
+.doc-bank-and-qr { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.doc-upi-qr { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.doc-upi-qr img { width: 92px; height: 92px; border: 1px solid var(--border); border-radius: 6px; padding: 4px; background: #fff; }
+.doc-upi-qr span { font-size: 11px; color: var(--muted); }
+@media (max-width: 640px) {
+  .doc-bank-and-qr { flex-direction: column; align-items: flex-start; }
+}
+.doc-terms { white-space: pre-wrap; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.doc-signature { margin-top: 32px; text-align: right; font-size: 13px; }
+.doc-signature-img { max-height: 48px; max-width: 180px; display: inline-block; margin-bottom: 4px; }
+.doc-signature-line { border-top: 1px solid var(--ink); width: 180px; margin-left: auto; margin-bottom: 6px; }
+.invoice-signature-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 28px; }
+.invoice-signature-row .doc-signature { margin-top: 0; min-width: 180px; }
+.invoice-receiver-signature { width: 42%; max-width: 240px; font-size: 13px; }
+.invoice-receiver-signature .doc-signature-line { margin-left: 0; }
+.invoice-receiver-signature p, .invoice-signature-row .doc-signature p { margin: 0; }
+.doc-made-in-india { text-transform: none; letter-spacing: normal; }
+.doc-gst-note { font-size: 12px; margin: 6px 0 0; max-width: 420px; margin-left: auto; text-align: right; }
+
+.tax-rate-input { display: flex; align-items: center; gap: 6px; }
+.tax-rate-input input { width: 70px; }
+.tax-rate-back { font-size: 11px; white-space: nowrap; }
+
+.unit-select { display: flex; align-items: center; gap: 6px; }
+.unit-select input { width: 90px; }
+
+/* Goods/Service type picker on the item form (2026-09-16) — plain radio
+   buttons, not a full form-row, since it's one quick choice that decides
+   which Unit list applies below it. */
+.radio-row { display: flex; align-items: center; gap: 20px; margin: 8px 0 12px; }
+.radio-option { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
+.radio-option input { width: auto; margin-top: 0; }
+
+/* Sales Information / Purchase Information section headers inside
+   ItemFormModal (2026-09-17) — a small labeled divider, not a full <h2>,
+   since these are subsections of one modal rather than separate cards. */
+.modal-section-title {
+  margin: 18px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #e2e5ea);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* New Invoice's line item table grew an HSN/SAC and a Unit column
+   (2026-09-17) — wide enough on a small screen that it needs to scroll
+   sideways in its own box rather than pushing the whole page wider. */
+.line-item-table-wrap { overflow-x: auto; }
+
+/* Line item table: drag to reorder, a hover highlight, a per-line "..."
+   menu, and section headers (2026-09-21), matching the reference behavior
+   Naveen sent from Zoho's own line item table. All four land the same way
+   on Invoices, Quotes, and Credit Notes through the one shared
+   LineItemsTable component. */
+.line-item-table .line-item-drag { width: 22px; padding-left: 6px; padding-right: 0; }
+.line-drag-handle {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--muted); cursor: grab; padding: 2px;
+}
+.line-drag-handle:active { cursor: grabbing; }
+.line-item-row:hover .line-drag-handle, .line-item-header-row:hover .line-drag-handle { color: var(--ink); }
+/* The hover/focus blue box from Naveen's reference screenshots: the whole
+   item picker cell gets a visible outline once the pointer is over the row
+   or a field inside it has focus, instead of staying flat at all times. */
+.line-item-details-inner { border-radius: 6px; padding: 2px; border: 1px solid transparent; transition: border-color 0.1s ease; }
+.line-item-row:hover .line-item-details-inner,
+.line-item-details-inner:focus-within { border-color: #93c5fd; background: #eff6ff; }
+.line-item-actions { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.line-item-remove { color: var(--muted); font-size: 16px; line-height: 1; }
+.line-item-remove:hover { color: #b3261e; background: var(--bg); }
+/* The portaled "..." dropdown (see LineItemMenu.jsx's own comment on why it
+   has to escape the table's scrolling wrapper), styled like the item
+   picker's own dropdown so the two portaled menus in this table read as one
+   family. */
+.line-item-menu {
+  position: fixed; z-index: 1000; width: 210px;
+  background: white; border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18); overflow: hidden;
+}
+.line-item-menu button {
+  display: block; width: 100%; text-align: left; padding: 9px 14px; border: none;
+  border-bottom: 1px solid var(--border); background: white; cursor: pointer;
+  font-size: 13px; font-weight: 500; font: inherit; color: var(--ink);
+}
+.line-item-menu button:last-child { border-bottom: none; }
+.line-item-menu button:hover { background: var(--bg); }
+/* A section header row (see db.js's line_type comment): a shaded divider
+   across the row rather than another line of qty/rate/amount fields with
+   nothing to put in them. */
+.line-item-header-row { background: #f3f4f6; }
+.line-item-header-input {
+  width: 100%; background: none; border: none; border-bottom: 1px dashed var(--border);
+  font-weight: 600; font-size: 13px; color: var(--ink); padding: 6px 2px; margin-top: 0; border-radius: 0;
+}
+.line-item-header-input:focus { outline: none; border-bottom-color: var(--accent); }
+.line-item-header-input::placeholder { font-weight: 500; color: var(--muted); }
+.line-item-add-row { display: flex; align-items: center; gap: 18px; margin-top: 4px; }
+/* The HSN/SAC show/hide toggle (2026-09-21), Invoice only. Sits above the
+   table rather than crowding the header row itself. */
+.line-item-table-toolbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.line-item-table-toolbar .checkbox-label { font-size: 13px; color: var(--muted); }
+/* "Insert Items in Bulk" modal's scrollable checkbox list. */
+.bulk-item-list { max-height: 260px; overflow-y: auto; margin: 10px 0; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; }
+.bulk-item-list .muted { padding: 8px 4px; }
+
+/* ---- Print ----
+   Printing an invoice/quote/credit note can happen from a standalone page
+   (fine on its own) OR from the embedded pane inside the master-detail
+   Invoices list on the Dashboard — where the surrounding page (sidebar,
+   stat tiles, invoice list column) sits right next to the document in the
+   DOM and would otherwise print too. To always print ONLY the document
+   regardless of where it's embedded, hide everything on the page and then
+   re-reveal just the .invoice-doc subtree, pulled out to the page origin. */
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  /* Chrome (and most browsers) drop CSS background colors from a print or
+     "Save as PDF" by default, the "Background graphics" print option is off
+     unless the person turns it on themselves. The invoice document leans on
+     background color for real structure, not decoration: the dark header
+     row on the line item table and the shaded Balance Due band both vanish
+     without this, which is a big part of why a printed invoice read as
+     plain and flat next to a real Zoho invoice side by side (2026-09-21).
+     This forces backgrounds to print regardless of that toggle. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .no-print { display: none !important; }
+  body { background: white; }
+  main { max-width: none; padding: 0; margin: 0; }
+  body * { visibility: hidden; }
+  .invoice-doc, .invoice-doc *, .print-copy-label { visibility: visible; }
+  .invoice-doc {
+    position: absolute; top: 0; left: 0; width: 100% !important;
+    max-width: none !important; border: none; margin: 0; box-shadow: none;
+  }
+  .invoice-doc.invoice-full { padding: 0; }
+  .invoice-doc.invoice-page-fill { min-height: 273mm; padding: 5mm; }
+  .invoice-doc.invoice-page-fill > .invoice-template { min-height: 263mm; }
+  /* Blank-page bug, found 2026-09-21: .invoice-doc-wrap (added for the
+     status ribbon) is "position: relative; overflow: hidden", sized to fit
+     its only in-flow child. Pulling .invoice-doc out to "position:
+     absolute" above removes it from that flow, so the wrap collapses to
+     zero height, and its own overflow: hidden then clips the absolutely
+     positioned invoice to nothing, an entirely blank printed page.
+     Neutralizing the wrap's own overflow/height here restores the "pulled
+     out to the page origin" behavior this block was written for.
+     Multiple print copies (2026-09-22, GST Rule 48(6) Original/Duplicate/
+     Triplicate) changed how that escape happens for InvoiceDetail.jsx
+     specifically: it always wraps each printed copy's .invoice-doc in its
+     own .print-copy, even when there's only one. Escaping every
+     .invoice-doc individually to top:0/left:0 (the rule above, still
+     needed as-is for the Quote/Credit Note/public invoice views, none of
+     which have this wrapper) would stack every copy on the very same spot
+     instead of one page each, so here the escape happens once, at
+     .invoice-doc-wrap itself, and each .print-copy/.invoice-doc pair stays
+     in normal document flow beneath it, paginated with
+     page-break-after. */
+  .invoice-doc-wrap {
+    position: absolute; top: 0; left: 0; width: 100%;
+    overflow: visible !important; height: auto !important;
+  }
+  .invoice-doc-wrap .invoice-doc { position: static; }
+  .invoice-detail-pane { overflow: visible !important; height: auto !important; }
+  .print-copy {
+    display: block !important;
+    page-break-after: always; break-after: page;
+  }
+  /* :last-of-type for the same reason the screen rule above uses
+     :first-of-type: robust regardless of the status ribbon's own <span>
+     sibling, even though in practice the ribbon always sits before every
+     .print-copy so :last-child would happen to also work here. */
+  .print-copy:last-of-type { page-break-after: auto; break-after: auto; }
+}
+
+/* ---- Public (no-login) invoice view ---- */
+.public-invoice-page { background: var(--bg); min-height: 100vh; padding: 24px 0 60px; }
+.public-invoice-toolbar { max-width: 210mm; margin: 0 auto 16px; padding: 0 8px; display: flex; justify-content: space-between; align-items: center; }
+.public-invoice-toolbar img { height: 24px; }
+
+/* ---- Client portal dashboard (redesigned 2026-09-15) ---- A proper
+   branded shell (dark topbar, tabs) instead of the plain white page the
+   portal used before, so a client's view feels like part of the same
+   product rather than a bare data dump. */
+.portal-shell { min-height: 100vh; background: var(--bg); }
+.portal-topbar {
+  background: var(--sidebar-bg); color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.portal-topbar-brand img { height: 28px; display: block; background: #fff; border-radius: 6px; padding: 4px 8px; }
+.portal-topbar-brand strong { font-size: 15px; }
+.portal-topbar-right { display: flex; align-items: center; gap: 16px; }
+.portal-topbar-name { font-size: 13px; color: var(--sidebar-ink); }
+.portal-logout-btn { color: #fff !important; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.portal-logout-btn:hover { color: var(--sidebar-ink-hover) !important; }
+
+.portal-content { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+.portal-hero h1 { margin: 0 0 2px; font-size: 24px; }
+.portal-hero > p.muted { margin-top: 0; }
+.portal-stat-tiles { grid-template-columns: repeat(3, 1fr); margin: 20px 0 28px; }
+
+.portal-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.portal-tab {
+  background: none; border: none; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.portal-tab:hover { color: var(--ink); }
+.portal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ---- Generalized tab bar (2026-09-16) ----
+   Same look as .portal-tabs above, but under a name that isn't tied to the
+   customer portal, so Master Admin and Settings can use it too without the
+   whole page turning into one long stack of always-visible sections. A tab
+   can carry a small count badge (open tickets, businesses
+   needing attention) so what needs a look is visible before you click in. */
+.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn {
+  background: none; border: none; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn-badge {
+  background: var(--accent-amber); color: white; font-size: 11px; font-weight: 700;
+  border-radius: 999px; padding: 1px 7px; line-height: 1.6; min-width: 8px; text-align: center;
+}
+
+.portal-table-wrap { overflow-x: auto; }
+.portal-invoice-actions { white-space: nowrap; }
+.portal-pay-qr { display: flex; align-items: center; gap: 16px; padding: 12px 4px; }
+.portal-pay-qr img { width: 120px; height: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 6px; background: #fff; flex: none; }
+.portal-pay-qr p { margin: 0 0 6px; }
+
+.portal-profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.portal-profile-grid .panel p { margin: 3px 0; font-size: 14px; }
+@media (max-width: 720px) {
+  .portal-stat-tiles { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .portal-profile-grid { grid-template-columns: 1fr; }
+  .portal-topbar { padding: 12px 16px; }
+}
+
+/* ---- Login and signup layouts ---- */
+.login-shell { min-height: 100vh; display: flex; }
+
+.login-page-shell { min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
+.login-page-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.login-page-footer {
+  min-height: 52px; display: flex; align-items: center; justify-content: center;
+  background: var(--sidebar-bg); color: var(--sidebar-ink); font-size: 12px;
+}
+.login-page-footer a { color: inherit; }
+.login-form-logo { display: block; height: 48px; max-width: 100%; object-fit: contain; margin: 0 0 28px; }
+
+.login-brand-panel {
+  flex: 0 0 44%;
+  max-width: 560px;
+  background: radial-gradient(circle at 18% 12%, var(--sidebar-bg-raised) 0%, var(--sidebar-bg) 55%, #071f3c 100%);
+  color: #fff;
+  padding: 48px 48px 40px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* The full-color logo doesn't read on a dark background (same reason the
+   sidebar uses an icon-only mark + white text instead), so it sits on its
+   own small white plate here rather than directly on the navy panel. */
+.login-brand-mark {
+  display: inline-flex; align-self: flex-start; align-items: center;
+  background: #fff; border-radius: 10px; padding: 10px 18px; margin-bottom: 64px;
+}
+.login-brand-mark img { height: 28px; display: block; }
+
+.login-brand-footer {
+  font-size: 12px; color: var(--sidebar-ink); display: flex; align-items: center; gap: 4px; margin-top: auto;
+  padding-top: 20px; border-top: 1px solid var(--sidebar-border);
+}
+
+.login-form-panel {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px; background: white;
+}
+
+.login-form-card { width: 100%; max-width: 380px; }
+.login-form-card h1 { font-size: 25px; margin: 0 0 6px; letter-spacing: -0.01em; }
+.login-subtitle { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+
+.login-field { margin-bottom: 18px; }
+.login-field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.login-field input {
+  width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font: inherit; font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.login-field input:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26, 127, 90, 0.14);
+}
+
+.login-submit {
+  width: 100%; padding: 12px; font-size: 14px; font-weight: 600; border-radius: 8px;
+  margin-top: 4px; margin-bottom: 22px;
+}
+
+.login-links { display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.login-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.login-links a:hover { text-decoration: underline; }
+.login-signup-note { color: var(--muted); }
+.login-signup-note a { color: var(--accent-amber); }
+
+/* Login's own "New here? Set up BillItUp" — 2026-09-15. The signup link used
+   to be a small line of muted text below Forgot Password (the .login-links/
+   .login-signup-note rules above, still used by Signup's own "Already have
+   an account?" footer) and people kept not seeing it. This makes it read as
+   an actual button — a divider to separate it from the login form, then a
+   full-width outlined button in the same amber already used for it, so
+   "click the orange one" (how Naveen was directing people verbally) still
+   points at the same color, just now with real button affordance. */
+.login-forgot-link {
+  display: block; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--accent); text-decoration: none; margin-bottom: 22px;
+}
+.login-forgot-link:hover { text-decoration: underline; }
+
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+.login-signup-cta {
+  display: block; width: 100%; box-sizing: border-box; text-align: center;
+  padding: 13px; border-radius: 8px; font-size: 14.5px; font-weight: 700;
+  border: 1.5px solid var(--accent-amber); color: var(--accent-amber);
+  text-decoration: none; transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.login-signup-cta:hover { background: var(--accent-amber); color: #fff; box-shadow: 0 8px 18px -10px rgba(217, 122, 31, 0.5); }
+
+.login-error-banner {
+  background: #fdecea; border: 1px solid #f3c6c1; color: #8a2b23;
+  padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 18px;
+}
+
+@media (max-width: 860px) {
+  .login-brand-panel { display: none; }
+  .login-form-panel { padding: 32px 20px; }
+}
+
+/* Signup reuses the same login-shell/login-brand-panel split as Login above
+   (same "first impression" weight) but its form panel is a 2-step wizard —
+   these two rules are the only wizard-specific additions. */
+.login-step-indicator {
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin: 0 0 22px;
+}
+.login-wizard-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.login-wizard-nav .link-btn { font-size: 13px; font-weight: 600; }
+
+/* ---- Simple auth pages: Forgot Password / Reset Password / Admin Login
+   (2026-09-15) ---- A lighter centered-card treatment for the smaller,
+   one-off auth screens, rather than the full split brand panel Login/Signup
+   get above — those two are the "first impression" moments, these three are
+   quick utility stops nobody lingers on. Reuses the login-field/
+   login-submit/login-links/login-error-banner rules above so every input
+   and button across all six auth screens still looks and behaves
+   identically. */
+.simple-auth-shell {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 32px 20px; box-sizing: border-box;
+  background: radial-gradient(circle at 50% 0%, #eaf5ef 0%, var(--bg) 45%);
+}
+.simple-auth-card {
+  width: 100%; max-width: 400px; background: #fff; border-radius: 14px;
+  border: 1px solid var(--border); box-shadow: 0 20px 44px -28px rgba(10, 44, 80, 0.28);
+  padding: 36px 36px 32px; box-sizing: border-box;
+}
+.simple-auth-logo { display: block; height: 24px; margin: 0 auto 26px; }
+.simple-auth-icon-badge {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 18px; color: var(--accent); background: #e7f4ee;
+}
+.simple-auth-icon-badge.is-admin { color: var(--sidebar-bg-raised); background: #e7edf5; }
+.simple-auth-card h1 { font-size: 21px; text-align: center; margin: 0 0 6px; letter-spacing: -0.01em; }
+.simple-auth-subtitle { color: var(--muted); font-size: 13.5px; text-align: center; margin: 0 0 26px; line-height: 1.45; }
+.simple-auth-success { text-align: center; }
+.simple-auth-success-check {
+  width: 44px; height: 44px; border-radius: 50%; background: #e7f4ee; color: var(--accent);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+}
+.simple-auth-links { text-align: center; margin-top: 6px; }
+.simple-auth-links a { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 13px; }
+.simple-auth-links a:hover { text-decoration: underline; }
+
+/* ---- Crash screen (ErrorBoundary.jsx, 2026-09-15) ---- Reuses the auth-page
+   card so a render error still looks like a normal, designed part of the
+   app rather than a browser error page or a blank screen. */
+.crash-icon-badge { color: var(--accent-amber); background: #fdf1e6; }
+.crash-reload-btn { display: block; width: 100%; text-align: center; margin-top: 4px; }
+
+/* ---- Terms of Service / Privacy Policy (2026-09-15) ---- A public, no-login
+   reading page — same navy/green brand as the auth screens, but a plain
+   readable article layout instead of a card, since the content here is
+   paragraphs and lists rather than a form. */
+.legal-page { min-height: 100vh; background: var(--bg); }
+.legal-header {
+  background: var(--sidebar-bg); padding: 20px 24px; display: flex;
+  align-items: center; justify-content: space-between;
+}
+.legal-header img { height: 24px; display: block; }
+.legal-header a { color: var(--sidebar-ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+.legal-header a:hover { color: #fff; }
+.legal-body { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+.legal-body h1 { font-size: 28px; letter-spacing: -0.01em; margin: 0 0 6px; }
+.legal-body .legal-updated { color: var(--muted); font-size: 13px; margin: 0 0 40px; }
+.legal-body h2 { font-size: 18px; margin: 40px 0 12px; letter-spacing: -0.01em; }
+.legal-body h2:first-of-type { margin-top: 0; }
+.legal-body p, .legal-body li { font-size: 14.5px; line-height: 1.7; color: var(--ink); }
+.legal-body ul { padding-left: 22px; margin: 0 0 14px; }
+.legal-body li { margin-bottom: 6px; }
+.legal-toc { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 36px; padding: 14px 18px; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
+.legal-toc a { font-size: 13px; color: var(--accent); font-weight: 600; text-decoration: none; }
+.legal-toc a:hover { text-decoration: underline; }
+
+/* ---- Master Admin (2026-09-15) ---- */
+/* A distinct navy top bar rather than the plain page-header every other
+   screen uses, so it's visually obvious this is the one super-admin
+   console for the whole install, not a regular business page. */
+.admin-page { min-height: 100vh; background: var(--bg); }
+.admin-topbar { background: var(--sidebar-bg); padding: 14px 24px; }
+.admin-topbar-inner {
+  max-width: 1100px; margin: 0 auto; display: flex; align-items: center;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.admin-topbar-brand { display: flex; align-items: center; gap: 10px; color: white; }
+.admin-topbar-brand img { height: 26px; width: 26px; border-radius: 6px; background: white; padding: 3px; }
+.admin-topbar-brand strong { font-size: 14px; }
+.admin-topbar-brand span { display: block; font-size: 11px; color: var(--sidebar-ink); letter-spacing: 0.03em; text-transform: uppercase; }
+.admin-topbar-logout {
+  background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.admin-topbar-logout:hover { background: rgba(255, 255, 255, 0.18); }
+
+.admin-content { max-width: 1100px; margin: 0 auto; padding: 28px 24px 64px; }
+
+.admin-stat-tile { position: relative; }
+.admin-stat-icon {
+  width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; background: #eaf5ef; color: var(--accent); margin-bottom: 2px;
+}
+.admin-stat-tile.attention .admin-stat-icon { background: #fdf1e6; color: var(--accent-amber); }
+.admin-stat-tile.attention .stat-value { color: var(--accent-amber); }
+
+/* Tiles like "Open Errors" are real buttons that jump to their tab, so a
+   number is never a dead end (2026-09-16) — reset the button defaults back
+   to look exactly like the plain .stat-tile div next to it, plus a hover/
+   focus cue so it actually reads as clickable. */
+.admin-stat-tile-clickable {
+  cursor: pointer; font: inherit; color: var(--ink); text-align: left; width: 100%;
+}
+.admin-stat-tile-clickable:hover { border-color: var(--accent); box-shadow: 0 2px 6px rgba(28, 31, 38, 0.08); }
+.admin-stat-tile-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.admin-section { margin-top: 4px; }
+.admin-section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.admin-section-header .settings-card-icon { background: #eaf5ef; color: var(--accent); }
+.admin-section-header h2 { margin: 0 0 2px; font-size: 17px; }
+.admin-section-header p { margin: 0; }
+
+.admin-table-card {
+  background: white; border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px 24px; box-shadow: 0 1px 2px rgba(28, 31, 38, 0.04);
+  overflow-x: auto;
+}
+.admin-table-card > *:last-child { margin-bottom: 0; }
+
+/* The businesses table grew from 7 to 11 columns (2026-09-15, contact info,
+   customer count and invoiced total, plus a details toggle) — the card
+   above scrolls sideways on narrow screens rather than squeezing every
+   column unreadably thin. */
+.admin-contact-cell { font-size: 12.5px; line-height: 1.5; white-space: nowrap; }
+
+/* Which login actually owns a business, and — when the same login runs more
+   than one firm — which other firm(s), shown right under the name so a
+   second firm added via "Add Another Firm" never reads as an unrelated,
+   no-contact free signup (2026-09-16). */
+.admin-owner-login { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.admin-sibling-firms { font-size: 11.5px; color: var(--accent-amber); font-weight: 600; margin-top: 1px; }
+
+.admin-detail-row td { background: var(--bg); padding: 0; }
+.admin-detail-panel { display: flex; gap: 32px; flex-wrap: wrap; padding: 16px 18px; }
+.admin-detail-facts { display: flex; flex-direction: column; gap: 8px; min-width: 160px; }
+.admin-detail-facts > div { display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+.admin-detail-users { flex: 1; min-width: 260px; }
+.admin-detail-users > .muted { display: block; margin-bottom: 8px; }
+.admin-detail-users-table { background: white; border-radius: 8px; overflow: hidden; }
+.admin-copy-btn { align-self: flex-start; margin-top: 4px; font-size: 12.5px; padding: 6px 12px; }
+
+.sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+.sortable-th:hover { color: var(--ink); }
+.sortable-th .sort-arrow { display: inline-block; margin-left: 3px; opacity: 0.5; font-size: 11px; }
+.sortable-th.active .sort-arrow { opacity: 1; color: var(--accent); }
+
+.badge-premium { background: #dcfce7; color: #166534; }
+.badge-free { background: #eee; color: #555; }
+
+/* Colour-coded issue flags on the Businesses table (2026-09-15) — Naveen
+   asked that a problem business be easy to spot rather than something he
+   has to read every row to notice. Amber for "worth a look" (no contact on
+   file, gone quiet), red for the one that's actively misleading (a cloud
+   backup that looks connected but is failing to upload). */
+.admin-row-warn { background: #fdf8ef; }
+.admin-row-warn:hover { background: #fbf1de; }
+.admin-row-danger { background: #fdf1f0; }
+.admin-row-danger:hover { background: #fbe4e2; }
+.badge-attention { background: #fdf1e6; color: var(--accent-amber); font-weight: 600; }
+.admin-attention-text { color: var(--accent-amber); font-weight: 600; }
+.admin-section-badge { margin-left: 10px; vertical-align: middle; font-size: 12px; }
+
+/* ---- Landing page (2026-09-15) ----
+   The public marketing page at "/" for a logged-out visitor (logged-in
+   users still land on their Dashboard — see App.jsx's Home component).
+   Ported from the standalone /landing/index.html that already existed in
+   the repo but was never actually wired up anywhere, adapted so its CTAs
+   point at /login and /signup instead of only at GitHub. Deliberately uses
+   its own distinct type system (Fraunces + IBM Plex, loaded in
+   client/index.html) and color tokens rather than the app shell's Plus
+   Jakarta Sans/navy-sidebar look — a marketing page and a working app are
+   different jobs and are allowed to look different, the way stripe.com and
+   dashboard.stripe.com do. Every rule below is scoped under .landing-page
+   so nothing here leaks onto, or gets overridden by, the rest of the app's
+   CSS (which uses bare `button`, `h1`, `.btn` selectors of its own). */
+.landing-page {
+  --l-bg: #f3f5f8;
+  --l-surface: #ffffff;
+  --l-paper: #fbfaf7;
+  --l-ink: #0c1a2b;
+  --l-muted: #55647a;
+  --l-border: #dde3ec;
+  --l-navy: #0a3d78;
+  --l-navy-ink: #ffffff;
+  --l-navy-dim: #e8eef7;
+  --l-amber: #d97a1f;
+  --l-green: #1f8f42;
+  --l-green-dim: #e5f4e9;
+  --l-mono-line: #c7cfdb;
+  --l-shadow: 0 24px 60px -32px rgba(10, 30, 60, 0.35);
+  color-scheme: light;
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  .landing-page {
+    --l-bg: #0b1420;
+    --l-surface: #101c2c;
+    --l-paper: #14202f;
+    --l-ink: #eaeff6;
+    --l-muted: #93a3b8;
+    --l-border: #253449;
+    --l-navy: #4f86c6;
+    --l-navy-ink: #06111e;
+    --l-navy-dim: #16273c;
+    --l-amber: #e59a4a;
+    --l-green: #49c777;
+    --l-green-dim: #12281c;
+    --l-mono-line: #2a3a4f;
+    --l-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-page * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+.landing-page .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.landing-page a { color: inherit; }
+.landing-page h1, .landing-page h2, .landing-page h3 { font-family: "Fraunces", Georgia, serif; text-wrap: balance; margin: 0; }
+.landing-page .eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12.5px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--l-navy); font-weight: 500;
+}
+.landing-page .l-num { font-variant-numeric: tabular-nums; }
+
+.landing-page header.site {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--l-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--l-border);
+}
+.landing-page .site-nav { display: flex; align-items: center; gap: 28px; padding: 14px 0; }
+.landing-page .site-nav .brand { display: flex; align-items: center; margin-right: auto; }
+.landing-page .site-nav .brand img { height: 26px; display: block; }
+.landing-page .site-nav .links { display: flex; gap: 26px; font-size: 14.5px; align-items: center; }
+.landing-page .site-nav .links a { text-decoration: none; color: var(--l-muted); }
+.landing-page .site-nav .links a:hover { color: var(--l-ink); }
+.landing-page .site-nav .cta { display: flex; gap: 10px; }
+@media (max-width: 760px) {
+  .landing-page .site-nav .links { display: none; }
+}
+
+.landing-page .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-size: 14.5px; font-weight: 600;
+  padding: 10px 18px; border-radius: 7px; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.landing-page .btn:active { transform: translateY(1px); }
+.landing-page .btn-primary { background: var(--l-navy); color: var(--l-navy-ink); }
+.landing-page .btn-primary:hover { box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--l-navy) 70%, transparent); }
+.landing-page .btn-ghost { background: transparent; color: var(--l-ink); border-color: var(--l-border); }
+.landing-page .btn-ghost:hover { border-color: var(--l-navy); color: var(--l-navy); }
+.landing-page .btn-sm { padding: 7px 13px; font-size: 13.5px; }
+
+.landing-page .hero {
+  padding: 76px 0 64px;
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center;
+}
+.landing-page .hero h1 {
+  font-size: clamp(34px, 4.6vw, 52px); line-height: 1.06; font-weight: 600;
+  letter-spacing: -0.01em; margin: 14px 0 20px;
+}
+.landing-page .hero h1 em { font-style: normal; color: var(--l-navy); }
+.landing-page .hero p.lead { font-size: 17.5px; line-height: 1.6; color: var(--l-muted); max-width: 46ch; margin: 0 0 26px; }
+.landing-page .hero .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.landing-page .hero .trust { font-size: 13px; color: var(--l-muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.landing-page .hero .trust .dot { opacity: 0.5; }
+@media (max-width: 860px) {
+  .landing-page .hero { grid-template-columns: 1fr; padding-top: 40px; }
+}
+
+.landing-page .mock-stage { position: relative; }
+.landing-page .mock-invoice {
+  background: var(--l-paper);
+  border: 1px solid var(--l-border);
+  border-radius: 10px;
+  box-shadow: var(--l-shadow);
+  padding: 26px 26px 22px;
+  font-size: 12px;
+  transform: rotate(0.6deg);
+  animation: landingMockIn 0.7s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes landingMockIn { from { opacity: 0; transform: translateY(14px) rotate(0.6deg); } to { opacity: 1; transform: translateY(0) rotate(0.6deg); } }
+.landing-page .mock-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--l-border); padding-bottom: 14px; margin-bottom: 14px; }
+.landing-page .mock-brand { display: flex; align-items: center; gap: 8px; }
+.landing-page .mock-brand .mark {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--l-navy);
+  display: flex; align-items: center; justify-content: center; color: var(--l-navy-ink); font-weight: 700; font-size: 13px;
+  font-family: "Fraunces", serif;
+}
+.landing-page .mock-brand div b { display: block; font-size: 13.5px; }
+.landing-page .mock-brand div span { display: block; font-size: 10.5px; color: var(--l-muted); }
+.landing-page .mock-doc-id { text-align: right; }
+.landing-page .mock-doc-id .label { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--l-muted); letter-spacing: 0.04em; }
+.landing-page .mock-doc-id .value { font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600; }
+.landing-page .mock-parties { display: flex; justify-content: space-between; font-size: 11px; color: var(--l-muted); margin-bottom: 14px; gap: 16px; }
+.landing-page .mock-parties b { color: var(--l-ink); display: block; font-size: 12px; margin-bottom: 2px; }
+.landing-page .mock-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.landing-page .mock-table th { text-align: left; font-size: 10px; color: var(--l-muted); font-weight: 600; padding: 5px 4px; border-bottom: 1px solid var(--l-mono-line); }
+.landing-page .mock-table td { padding: 6px 4px; border-bottom: 1px solid var(--l-border); font-size: 11.5px; }
+.landing-page .mock-table td.r, .landing-page .mock-table th.r { text-align: right; font-family: "IBM Plex Mono", monospace; }
+.landing-page .mock-totals { margin-left: auto; width: 55%; font-size: 11.5px; }
+.landing-page .mock-totals div { display: flex; justify-content: space-between; padding: 3px 0; }
+.landing-page .mock-totals .grand { font-weight: 700; border-top: 1px solid var(--l-mono-line); margin-top: 4px; padding-top: 6px; font-size: 13px; }
+.landing-page .mock-totals .due { background: var(--l-green-dim); color: var(--l-green); font-weight: 700; padding: 6px 8px; border-radius: 5px; margin-top: 6px; }
+.landing-page .mock-words { font-size: 10.5px; color: var(--l-muted); margin-top: 12px; font-style: italic; }
+.landing-page .mock-badge {
+  position: absolute; top: -14px; right: 18px;
+  background: var(--l-amber); color: #241300; font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--l-amber) 70%, transparent);
+  transform: rotate(-3deg);
+}
+
+.landing-page .strip { border-top: 1px solid var(--l-border); border-bottom: 1px solid var(--l-border); background: var(--l-surface); }
+.landing-page .strip .wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.landing-page .strip .cell { padding: 26px 22px; border-left: 1px solid var(--l-border); }
+.landing-page .strip .cell:first-child { border-left: none; }
+.landing-page .strip .cell .eyebrow { display: block; margin-bottom: 6px; }
+.landing-page .strip .cell p { margin: 0; font-size: 14.5px; color: var(--l-muted); line-height: 1.55; }
+.landing-page .strip .cell strong { color: var(--l-ink); }
+@media (max-width: 760px) {
+  .landing-page .strip .wrap { grid-template-columns: 1fr; }
+  .landing-page .strip .cell { border-left: none; border-top: 1px solid var(--l-border); }
+  .landing-page .strip .cell:first-child { border-top: none; }
+}
+
+.landing-page section { padding: 84px 0; }
+.landing-page .section-head { max-width: 640px; margin-bottom: 46px; }
+.landing-page .section-head .eyebrow { display: block; margin-bottom: 10px; }
+.landing-page .section-head h2 { font-size: clamp(26px, 3.2vw, 34px); font-weight: 600; line-height: 1.15; }
+.landing-page .section-head p { color: var(--l-muted); font-size: 15.5px; margin-top: 12px; line-height: 1.6; }
+
+.landing-page .ledger { border-top: 1px solid var(--l-border); }
+.landing-page .ledger-row {
+  display: grid; grid-template-columns: 64px 1fr 1.4fr; gap: 22px;
+  padding: 26px 0; border-bottom: 1px solid var(--l-border);
+  align-items: start;
+}
+.landing-page .ledger-row .li-num {
+  font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--l-muted);
+  padding-top: 4px;
+}
+.landing-page .ledger-row h3 { font-size: 18px; font-weight: 600; font-family: "IBM Plex Sans", sans-serif; margin-bottom: 6px; }
+.landing-page .ledger-row p { margin: 0; color: var(--l-muted); font-size: 14.5px; line-height: 1.6; }
+@media (max-width: 700px) {
+  .landing-page .ledger-row { grid-template-columns: 32px 1fr; }
+  .landing-page .ledger-row > p { grid-column: 2; }
+}
+
+.landing-page .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.landing-page .compare .col { border: 1px solid var(--l-border); border-radius: 10px; overflow: hidden; background: var(--l-surface); }
+.landing-page .compare .col-head { padding: 16px 20px; font-weight: 600; font-size: 15px; border-bottom: 1px solid var(--l-border); }
+.landing-page .compare .col.you .col-head { background: var(--l-navy-dim); color: var(--l-navy); }
+.landing-page .compare .col.them .col-head { color: var(--l-muted); }
+.landing-page .compare ul { list-style: none; margin: 0; padding: 6px 0; }
+.landing-page .compare li { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid var(--l-border); display: flex; gap: 10px; }
+.landing-page .compare li:last-child { border-bottom: none; }
+.landing-page .compare .col.you li::before { content: "✓"; color: var(--l-green); font-weight: 700; }
+.landing-page .compare .col.them li::before { content: "–"; color: var(--l-muted); }
+@media (max-width: 700px) { .landing-page .compare { grid-template-columns: 1fr; } }
+
+.landing-page .cta-band { background: var(--l-navy); color: var(--l-navy-ink); border-radius: 16px; padding: 56px 48px; display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap; }
+.landing-page .cta-band h2 { color: var(--l-navy-ink); font-size: clamp(24px, 3vw, 30px); }
+.landing-page .cta-band p { margin: 10px 0 0; color: color-mix(in srgb, var(--l-navy-ink) 75%, transparent); font-size: 15px; max-width: 42ch; }
+.landing-page .cta-band .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.landing-page .cta-band .btn-primary { background: var(--l-navy-ink); color: var(--l-navy); }
+.landing-page .cta-band .btn-ghost { border-color: color-mix(in srgb, var(--l-navy-ink) 40%, transparent); color: var(--l-navy-ink); }
+.landing-page .cta-band .btn-ghost:hover { border-color: var(--l-navy-ink); color: var(--l-navy-ink); }
+
+.landing-page footer { border-top: 1px solid var(--l-border); padding: 40px 0 60px; }
+.landing-page footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.landing-page footer .brand { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--l-muted); }
+.landing-page footer .brand img { height: 20px; }
+.landing-page footer .links { display: flex; gap: 20px; font-size: 13.5px; }
+.landing-page footer .links a { text-decoration: none; color: var(--l-muted); }
+
+/* ---- Announcements (2026-09-15) ---- */
+.announcement-form { display: flex; flex-direction: column; gap: 10px; max-width: 520px; }
+.announcement-modal { text-align: center; }
+.announcement-icon-badge {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px; color: var(--accent-amber); background: #fdf1e6;
+}
+.announcement-modal h3 { margin: 0 0 8px; }
+.announcement-modal p { color: var(--ink); font-size: 14px; line-height: 1.5; }
+
+/* ---- Business Health page (2026-09-15) ---- */
+.admin-back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--sidebar-ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+.admin-back-link:hover { color: white; }
+.business-health-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.business-health-header h1 { margin: 0 0 4px; }
+.business-health-header p { margin: 0; }
+.business-health-header > span { margin-left: auto; }
+.business-health-logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; background: white; border: 1px solid var(--border); padding: 4px; }
+.badge-resolved { background: #dcfce7; color: #166534; }
+.error-route-cell { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; white-space: nowrap; }
+
+/* ---- Invoice approval banner, GST IMS select, checkbox rows (2026-09-16) ---- */
+.banner {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; margin: 10px 0;
+}
+.banner-warning { background: #fff4e5; border: 1px solid #f0c987; color: #7a4a00; }
+.banner-warning button { flex-shrink: 0; }
+.invoice-gst-ims { max-width: 220px; margin: 10px 0; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0; }
+.checkbox-row input { width: auto; margin-top: 0; }
+
+/* Settings > Terms & Conditions template library (2026-09-16) */
+.terms-template-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.terms-template-row {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+}
+.terms-template-preview {
+  margin: 4px 0 0; font-size: 12px; white-space: pre-line;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.terms-template-actions { display: flex; gap: 12px; white-space: nowrap; }
+
+/* ---- Two-sided invoice comment thread (2026-09-16) ---- */
+.invoice-comments { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); max-width: 560px; }
+.invoice-comments h4 { margin: 0 0 10px; }
+.invoice-comment-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.invoice-comment { padding: 8px 12px; border-radius: 8px; background: var(--bg); max-width: 90%; }
+.invoice-comment-business { align-self: flex-start; }
+.invoice-comment-customer { align-self: flex-end; background: #eaf5ef; }
+.invoice-comment-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; margin-bottom: 4px; }
+.invoice-comment-meta strong { font-size: 12px; }
+.invoice-comment p { margin: 0; font-size: 14px; white-space: pre-wrap; }
+.invoice-comment-form { display: flex; gap: 8px; align-items: flex-end; }
+.invoice-comment-form textarea { flex: 1; resize: vertical; margin-top: 0; }
+/* ---- First-time product tour (driver.js spotlight walkthrough, 2026-09-20) ----
+   Recolors driver.js's own popover to match BillItUp's own panel look
+   (border, radius, shadow, and the app's own type) instead of driver.js's
+   default black-and-white styling. Purely cosmetic, the tour still works
+   fine without any of this if a driver.js class name ever changes upstream. */
+.driver-popover.billitup-tour-popover {
+  background: white; color: var(--ink); border: 1px solid var(--border);
+  border-radius: 12px; font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18); max-width: 340px;
+}
+.billitup-tour-popover .driver-popover-title { color: var(--ink); font-size: 16px; font-weight: 700; }
+.billitup-tour-popover .driver-popover-description { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.billitup-tour-popover .driver-popover-progress-text { color: var(--muted); font-size: 12px; }
+.billitup-tour-popover .driver-popover-footer button {
+  font-family: inherit; font-size: 13px; font-weight: 600; border-radius: 8px; padding: 7px 14px;
+  border: 1px solid var(--border); background: white; color: var(--ink); box-shadow: none;
+}
+.billitup-tour-popover .driver-popover-next-btn,
+.billitup-tour-popover .driver-popover-done-btn {
+  background: var(--accent); border-color: var(--accent); color: white;
+}
+.billitup-tour-popover .driver-popover-close-btn { color: var(--muted); }
